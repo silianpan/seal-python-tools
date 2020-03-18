@@ -17,11 +17,19 @@ import pymysql
 # file_path_root = '/mnt/data/pkulaw/'
 file_path_root = '/Users/panliu/personal/seal-python-tools/html2pdf/pkulaw/'
 
+options = {
+'quiet': ''
+}
+
 
 def html2pdf(html_text, file_path):
     header = '<head><meta charset="UTF-8"></head>'
-    pdfkit.from_string(header + html_text, file_path)
-    return file_path
+    try:
+        # pdfkit.from_string(header + html_text, file_path, options=options)
+        pdfkit.from_string(header + html_text, file_path)
+        return file_path
+    except Exception as e:
+        print("from_string error")
 
 
 def start():
