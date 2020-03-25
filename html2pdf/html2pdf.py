@@ -20,13 +20,14 @@ file_path_root = '/Users/panliu/personal/seal-python-tools/html2pdf/pkulaw/'
 options = {
 'quiet': ''
 }
+css = 'pkulaw.css'
 
 
 def html2pdf(html_text, file_path):
     header = '<head><meta charset="UTF-8"></head>'
     try:
         # pdfkit.from_string(header + html_text, file_path, options=options)
-        pdfkit.from_string(header + html_text, file_path)
+        pdfkit.from_string(header + html_text, file_path, css=css)
         return file_path
     except Exception as e:
         print("from_string error")
