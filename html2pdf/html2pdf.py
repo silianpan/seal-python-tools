@@ -50,7 +50,7 @@ def bus_handle(file_path, mydb):
 	if not os.path.exists(tmp_path):
 	    os.makedirs(tmp_path)
         file_name = str(uuid.uuid4()) + '.pdf'
-        all_file_path = tmp_path + file_name
+        all_file_path = tmp_path + '/' + file_name
         html2pdf(content, all_file_path)
         # 更新数据
         new_pdf_url = 'upload/pkulaw_other2/' + today_path + '/' + file_name
