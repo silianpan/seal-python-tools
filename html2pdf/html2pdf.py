@@ -5,9 +5,10 @@
 # @Site    : 
 # @File    : html2pdf.py
 # @Software: PyCharm
-from datetime import datetime
 import os
 import sys
+from datetime import datetime
+
 reload(sys)
 sys.setdefaultencoding('utf8')
 
@@ -16,21 +17,23 @@ import uuid
 import pdfkit
 import pymysql
 
+# bus_list = [{'file_path':'/mnt/data/pkulaw/', 'db':'pkulaw'}, {'file_path':'/mnt/data/pkulaw_new/', 'db': 'pkulaw_new'}, {'file_path':'/mnt/data/pkulaw_other/', 'db': 'pkulaw_other'}]
+bus_list = [{'file_path': '/mnt/data/pkulaw_other2/', 'db': 'pkulaw_other'}]
 
-#bus_list = [{'file_path':'/mnt/data/pkulaw/', 'db':'pkulaw'}, {'file_path':'/mnt/data/pkulaw_new/', 'db': 'pkulaw_new'}, {'file_path':'/mnt/data/pkulaw_other/', 'db': 'pkulaw_other'}]
-bus_list = [{'file_path':'/mnt/data/pkulaw_other2/', 'db': 'pkulaw_other'}]
-#bus_list = [{'file_path':'/mnt/data/pkulaw_new/', 'db': 'pkulaw_new'}]
-#options = {
+
+# bus_list = [{'file_path':'/mnt/data/pkulaw_new/', 'db': 'pkulaw_new'}]
+# options = {
 # 'quiet': ''
-#}
+# }
 
 def html2pdf(html_text, file_path):
     header = '<head><meta charset="UTF-8"></head>'
     try:
-      pdfkit.from_string(header + html_text, file_path)
-      return file_path
+        pdfkit.from_string(header + html_text, file_path)
+        return file_path
     except Exception as e:
-      print('from_string error')
+        print('from_string error')
+
 
 def bus_handle(file_path, mydb):
     # 读数据库
@@ -43,12 +46,12 @@ def bus_handle(file_path, mydb):
         title = item[0]
         url = item[1]
         content = item[2]
-	# 根据当前日期新建文件夹
-	today_path = datetime.now().strftime('%Y%m%d')
-	# 不存在就创建目录
-	tmp_path = file_path + today_path
-	if not os.path.exists(tmp_path):
-	    os.makedirs(tmp_path)
+        # 根据当前日期新建文件夹
+        today_path = datetime.now().strftime('%Y%m%d')
+        # 不存在就创建目录
+        tmp_path = file_path + today_path
+        if not os.path.exists(tmp_path):
+            os.makedirs(tmp_path)
         file_name = str(uuid.uuid4()) + '.pdf'
         all_file_path = tmp_path + '/' + file_name
         html2pdf(content, all_file_path)
@@ -58,17 +61,16 @@ def bus_handle(file_path, mydb):
         try:
             cursor.execute(sql, (new_pdf_url, title, url))
             db.commit()
-        except Exception, e:
+        except Exception as e:
             # db.rollback()
-	    print(e)
+            print(e)
         # db.close()
 
 
 def start():
     for item in bus_list:
-	bus_handle(item['file_path'], item['db'])
+        bus_handle(item['file_path'], item['db'])
 
 
 if __name__ == '__main__':
     start()
-
