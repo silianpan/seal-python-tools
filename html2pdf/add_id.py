@@ -17,7 +17,7 @@ def bus_handle(mydb):
     # 读数据库
     db = pymysql.connect(host='localhost', user='root', password='Asdf@123', port=3306, db=mydb)
     cursor = db.cursor()
-    cursor.execute("select title,url,pdf_url from law t where t.pdf_url is not null")
+    cursor.execute("select title,url,pdf_url from law t where t.pdf_url is not null and t.id is null")
     all_data = cursor.fetchall()
     for item in all_data:
         title = item[0]
