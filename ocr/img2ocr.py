@@ -9,6 +9,7 @@
 from PIL import Image
 import pytesseract
 
-image = Image.open('Doc202004071439150002.png')
+image = Image.open('Doc202004071439150008.png')
 content = pytesseract.image_to_string(image, lang='chi_sim')  # 解析图片
+content = content.replace(' ', '')
 print(content)
