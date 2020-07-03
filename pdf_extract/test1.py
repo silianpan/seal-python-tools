@@ -339,8 +339,8 @@ split_range_list = {
 
 
 def start():
-    pdf_dir = './input'
-    output_dir = './output'
+    pdf_dir = '/Users/panliu/Downloads/自治区政府公报'
+    output_dir = '/Users/panliu/Downloads/自治区政府公报提取页面输出'
     if os.path.isdir(pdf_dir):
         for s in os.listdir(pdf_dir):
             file_name = s[:-4]
