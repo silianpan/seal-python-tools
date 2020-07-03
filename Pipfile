@@ -9,6 +9,7 @@ verify_ssl = true
 [packages]
 pdfkit = "*"
 pymysql = "*"
+pypdf2 = "*"
 
 [requires]
 python_version = "3.7"
