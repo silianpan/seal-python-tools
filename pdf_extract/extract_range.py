@@ -14,7 +14,7 @@ def extract_range(full_name, split_range, output_dir):
     # 转化为PDF文件对象
     pdfFileObj = PdfFileReader(full_name)
 
-    split_pages = split_range.page.split(',')
+    split_pages = split_range['page'].split(',')
     i = 0
     for split_page in split_pages:
         page_range = split_page.split('-')
@@ -35,7 +35,7 @@ def extract_range(full_name, split_range, output_dir):
             pdfWriter.addPage(pageObj)
 
         # Extracted pdf file path
-        pdf_file_path = os.path.join(output_dir, split_range.text[i] + '-{}-{}.pdf'.format(page_start, page_end))
+        pdf_file_path = os.path.join(output_dir, split_range['text'][i] + '-{}-{}.pdf'.format(page_start, page_end))
         i = i + 1
 
         with open(pdf_file_path, 'wb') as pdfOutputFile:
