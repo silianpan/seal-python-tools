@@ -10,7 +10,7 @@ import os
 from PyPDF2 import PdfFileReader, PdfFileWriter
 
 
-def extract_range(full_name, split_range, output_dir):
+def extract_range(file_name, full_name, split_range, output_dir):
     # 转化为PDF文件对象
     pdfFileObj = PdfFileReader(full_name)
 
@@ -35,7 +35,7 @@ def extract_range(full_name, split_range, output_dir):
             pdfWriter.addPage(pageObj)
 
         # Extracted pdf file path
-        pdf_file_path = os.path.join(output_dir, split_range['text'][i] + '-{}-{}.pdf'.format(page_start, page_end))
+        pdf_file_path = os.path.join(output_dir, file_name + '-' + split_range['text'][i] + '-{}-{}.pdf'.format(page_start, page_end))
         i = i + 1
 
         with open(pdf_file_path, 'wb') as pdfOutputFile:
@@ -63,9 +63,9 @@ def start():
     if os.path.isdir(pdf_dir):
         i = 0
         for s in os.listdir(pdf_dir):
-            # file_name = s[:-4]
+            file_name = s[:-4]
             full_name = os.path.join(pdf_dir, s)
-            extract_range(full_name, split_range_list[i], output_dir)
+            extract_range(file_name, full_name, split_range_list[i], output_dir)
             i = i + 1
 
 
