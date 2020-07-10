@@ -10,6 +10,7 @@ verify_ssl = true
 pdfkit = "*"
 pymysql = "*"
 pypdf2 = "*"
+easyocr = "*"
 
 [requires]
 python_version = "3.7"
