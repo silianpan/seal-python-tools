@@ -11,6 +11,7 @@ pdfkit = "*"
 pymysql = "*"
 pypdf2 = "*"
 easyocr = "*"
+openpyxl = "*"
 
 [requires]
 python_version = "3.7"
