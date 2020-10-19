@@ -21,7 +21,6 @@ def bus_start():
     ou = OracleUtil('192.168.1.200', 1521, 'xe', 'CDCZ_NPC2020MD', 'Asdf123')
     sql = 'select t.chr_name from %s t' % ('ele_enterprise')
     rows = ou.select(sql)
-    print(rows)
     chr_names = []
     for row in rows:
         if row is not None:
@@ -34,7 +33,7 @@ def bus_start():
     ret_names = []
     for row in rows:
         gov_dept = str(row[0]).strip()
-        if gov_dept not in chr_names:
+        if (gov_dept not in chr_names) and (gov_dept not in ret_names):
             ret_names.append(gov_dept)
 
     newfile = './ret_names.xlsx'
