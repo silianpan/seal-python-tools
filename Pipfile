@@ -12,6 +12,7 @@ pymysql = "*"
 pypdf2 = "*"
 easyocr = "*"
 openpyxl = "*"
+cx-oracle = "*"
 
 [requires]
 python_version = "3.7"
