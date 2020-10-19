@@ -50,6 +50,9 @@ def bus_start():
         i = i + 1
     wb.save(newfile)
 
+def update_data():
+    pass
+
 
 if __name__ == '__main__':
     bus_start()
