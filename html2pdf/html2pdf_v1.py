@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2020-02-04 11:04
 # @Author  : liupan
-# @Site    : 
+# @Site    : 将html转换为pdf，并添加外部的css使html生效，随机uuid为文件名，固定文件夹为/pkulaw/
 # @File    : html2pdf.py
 # @Software: PyCharm
 import sys

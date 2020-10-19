@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2020/4/7 下午3:20
 # @Author  : liupan
-# @Site    : 
+# @Site    : ocr：图像识别为文本，采用pytesseract识别
 # @File    : img2ocr.py
 # @Software: PyCharm
 

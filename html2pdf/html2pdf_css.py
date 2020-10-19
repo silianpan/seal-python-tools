@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2020-02-04 11:04
 # @Author  : liupan
-# @Site    : 
+# @Site    : 将html转换为pdf，并添加外部的css使html生效，固定文件名为原文件名
 # @File    : html2pdf.py
 # @Software: PyCharm
 import sys
@@ -43,7 +43,7 @@ def bus_handle(file_path, mydb):
         title = item[0]
         url = item[1]
         content = item[2]
-	pdf_url = item[3]
+        pdf_url = item[3]
         file_name = pdf_url.split('/')[2]
         all_file_path = file_path + file_name
         html2pdf(content, all_file_path)
@@ -55,13 +55,13 @@ def bus_handle(file_path, mydb):
         #    db.commit()
         #except Exception, e:
         #    # db.rollback()
-	#    print(e)
+        #    print(e)
         # db.close()
 
 
 def start():
     for item in bus_list:
-	bus_handle(item['file_path'], item['db'])
+        bus_handle(item['file_path'], item['db'])
 
 
 if __name__ == '__main__':
