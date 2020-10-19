@@ -19,16 +19,18 @@ from oracle_util import OracleUtil
 def bus_start():
     # 1. 查询oracle数据库数据
     ou = OracleUtil('192.168.1.200', 1521, 'xe', 'CDCZ_NPC2020MD', 'Asdf123')
-    sql = 'select t.chr_name from %s t' % ('ele_enterprise')
+    sql = 'select t.chr_name from %s t order by t.chr_name' % ('ele_enterprise')
     rows = ou.select(sql)
     chr_names = []
     for row in rows:
         if row is not None:
-            chr_names.append(str(row[0]).strip())
+            chr_name = str(row[0]).strip()
+            if chr_name not in chr_names:
+                chr_names.append(chr_name)
 
     # 2. 查询mysql数据库数据
     mu = MysqlUtil('192.168.1.200', 'bss_pro', 'root', 'Asdf@123')
-    sql = 'select t.gov_dept from %s t' % ('analysis_budget_dept_s1_out_fa')
+    sql = 'select t.gov_dept from %s t order by t.gov_dept' % ('analysis_budget_dept_s2_out_general')
     rows = mu.select(sql)
     ret_names = []
     for row in rows:
