@@ -87,4 +87,4 @@ def start(table_name):
 
 
 if __name__ == '__main__':
-    start('analysis_budget_dept_s8_summary_out')
+    start('analysis_budget_final_social')
