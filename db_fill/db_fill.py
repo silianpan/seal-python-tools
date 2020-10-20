@@ -81,6 +81,10 @@ def update_data(table_name):
         mu.update_sql(sql)
 
 
+def start(table_name):
+    update_data(table_name)
+    bus_start(table_name)
+
+
 if __name__ == '__main__':
-    bus_start('analysis_budget_dept_s3_out_general_base')
-    # update_data('analysis_budget_dept_s8_summary_out')
+    start('analysis_budget_dept_s8_summary_out')
