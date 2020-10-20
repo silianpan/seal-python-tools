@@ -19,7 +19,7 @@ from oracle_util import OracleUtil
 def bus_start(table_name):
     # 1. 查询oracle数据库数据
     ou = OracleUtil('192.168.1.200', 1521, 'xe', 'CDCZ_NPC2020MD', 'Asdf123')
-    sql = "select t.chr_name from %s t order by t.chr_name" % ('ele_enterprise')
+    sql = "select distinct t.chr_name from %s t order by t.chr_name" % ('ele_enterprise')
     rows = ou.select(sql)
     chr_names = []
     for row in rows:
@@ -30,7 +30,7 @@ def bus_start(table_name):
 
     # 2. 查询mysql数据库数据
     mu = MysqlUtil('192.168.1.200', 'bss_pro', 'root', 'Asdf@123')
-    sql = "select t.gov_dept from %s t order by t.gov_dept" % (table_name)
+    sql = "select distinct t.gov_dept from %s t order by t.gov_dept" % (table_name)
     rows = mu.select(sql)
     ret_names = []
     for row in rows:
