@@ -65,8 +65,8 @@ def read_excel():
         tname = ws.cell(r, 2).value
         if sname and tname:
             item = {
-                'sname': sname,
-                'tname': tname
+                'sname': str(sname).strip(),
+                'tname': str(tname).strip()
             }
             all_item.append(item)
     return all_item
@@ -82,5 +82,5 @@ def update_data(table_name):
 
 
 if __name__ == '__main__':
-    bus_start('analysis_budget_dept_s2_out_general')
+    bus_start('analysis_budget_dept_s3_out_general_base')
     # update_data('analysis_budget_dept_s8_summary_out')
