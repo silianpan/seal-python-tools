@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2020/10/19 9:48 上午
 # @Author  : silianpan
-# @Site    : 数据库数据补全-部门
+# @Site    : 数据库数据补全-预算科目
 # @File    : db_fill.py
 # @Software: PyCharm
 
@@ -19,7 +19,7 @@ from oracle_util import OracleUtil
 def bus_start(table_name):
     # 1. 查询oracle数据库数据
     ou = OracleUtil('192.168.1.200', 1521, 'xe', 'CDCZ_NPC2020MD', 'Asdf123')
-    sql = "select distinct t.chr_name from %s t order by t.chr_name" % ('ele_enterprise')
+    sql = "select distinct t.chr_name from %s t order by t.chr_name" % ('ele_budget_subject')
     rows = ou.select(sql)
     chr_names = []
     for row in rows:
@@ -30,15 +30,15 @@ def bus_start(table_name):
 
     # 2. 查询mysql数据库数据
     mu = MysqlUtil('192.168.1.200', 'bss_pro', 'root', 'Asdf@123')
-    sql = "select distinct t.gov_dept from %s t order by t.gov_dept" % (table_name)
+    sql = "select distinct t.subject from %s t where t.year=2020 order by t.subject" % (table_name)
     rows = mu.select(sql)
     ret_names = []
     for row in rows:
-        gov_dept = str(row[0]).strip()
-        if (gov_dept not in chr_names) and (gov_dept not in ret_names):
-            ret_names.append(gov_dept)
+        subject = str(row[0]).strip()
+        if (subject not in chr_names) and (subject not in ret_names):
+            ret_names.append(subject)
 
-    newfile = './ret_names.xlsx'
+    newfile = './ret_names_subject.xlsx'
     wb = load_workbook(newfile)
     ws = wb['Sheet1']
     # 直接根据位置进行赋值
@@ -52,7 +52,7 @@ def bus_start(table_name):
 
 
 def read_excel():
-    excel_file = r'./ret_names_1.xlsx'
+    excel_file = r'./ret_names_subject_1.xlsx'
     inwb = load_workbook(excel_file)
     ws = inwb['Sheet1']
 
@@ -76,15 +76,15 @@ def update_data(table_name):
     mu = MysqlUtil('192.168.1.200', 'bss_pro', 'root', 'Asdf@123')
     name_map = read_excel()
     for item in name_map:
-        sql = "update %s t set t.gov_dept='%s' where t.gov_dept='%s'" % (table_name, item['tname'], item['sname'])
+        sql = "update %s t set t.subject='%s' where t.year=2020 and t.subject='%s'" % (table_name, item['tname'], item['sname'])
         print(sql)
         mu.update_sql(sql)
 
 
 def start(table_name):
-    update_data(table_name)
+    # update_data(table_name)
     bus_start(table_name)
 
 
 if __name__ == '__main__':
-    start('analysis_budget_final_social')
+    start('analysis_budget_dept_s1_out_fa')
