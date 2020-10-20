@@ -37,6 +37,14 @@ class MysqlUtil:
         except Exception as e:
             logger.error(e)
 
+    def update_sql(self, sql):
+        if self.is_connected:
+            try:
+                self.cursor.execute(sql)
+                self.conn.commit()
+            except Exception as e:
+                logger.error(e)
+
     def insert(self, tablename=None, **ret):
         if self.is_connected:
             tablename = self.escape(tablename)

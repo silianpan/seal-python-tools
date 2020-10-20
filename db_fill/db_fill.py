@@ -19,7 +19,7 @@ from oracle_util import OracleUtil
 def bus_start():
     # 1. 查询oracle数据库数据
     ou = OracleUtil('192.168.1.200', 1521, 'xe', 'CDCZ_NPC2020MD', 'Asdf123')
-    sql = 'select t.chr_name from %s t order by t.chr_name' % ('ele_enterprise')
+    sql = "select t.chr_name from %s t order by t.chr_name" % ('ele_enterprise')
     rows = ou.select(sql)
     chr_names = []
     for row in rows:
@@ -30,7 +30,7 @@ def bus_start():
 
     # 2. 查询mysql数据库数据
     mu = MysqlUtil('192.168.1.200', 'bss_pro', 'root', 'Asdf@123')
-    sql = 'select t.gov_dept from %s t order by t.gov_dept' % ('analysis_budget_dept_s2_out_general')
+    sql = "select t.gov_dept from %s t order by t.gov_dept" % ('analysis_budget_dept_s2_out_general')
     rows = mu.select(sql)
     ret_names = []
     for row in rows:
@@ -50,9 +50,37 @@ def bus_start():
         i = i + 1
     wb.save(newfile)
 
-def update_data():
-    pass
+
+def read_excel():
+    excel_file = r'./ret_names_1.xlsx'
+    inwb = load_workbook(excel_file)
+    ws = inwb['Sheet1']
+
+    # 获取sheet的最大行数和列数
+    rows = ws.max_row
+    cols = ws.max_column
+    all_item = []
+    for r in range(2, rows + 1):
+        sname = ws.cell(r, 1).value
+        tname = ws.cell(r, 2).value
+        if sname and tname:
+            item = {
+                'sname': sname,
+                'tname': tname
+            }
+            all_item.append(item)
+    return all_item
+
+
+def update_data(table_name):
+    mu = MysqlUtil('192.168.1.200', 'bss_pro', 'root', 'Asdf@123')
+    name_map = read_excel()
+    for item in name_map:
+        sql = "update %s t set t.gov_dept='%s' where t.gov_dept='%s'" % (table_name, item['tname'], item['sname'])
+        print(sql)
+        mu.update_sql(sql)
 
 
 if __name__ == '__main__':
-    bus_start()
+    # bus_start()
+    update_data('analysis_budget_dept_s2_out_general')
