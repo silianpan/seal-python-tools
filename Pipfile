@@ -13,6 +13,9 @@ pypdf2 = "*"
 easyocr = "*"
 openpyxl = "*"
 cx-oracle = "*"
+pdfminer3k = "*"
+python-docx = "*"
+pdf2docx = "*"
 
 [requires]
 python_version = "3.7"
