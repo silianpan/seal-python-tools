@@ -1,3 +1,11 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# @Time    : 2020/11/5 4:54 下午
+# @Author  : silianpan
+# @Site    : 新浪医药新闻爬取
+# @File    : bio_yaozh.py
+# @Software: PyCharm
+
 import json
 import re
 
@@ -6,8 +14,12 @@ from fake_useragent import UserAgent
 from pyspider.libs.base_handler import *
 
 pattern_article = re.compile(u'^https://med.sina.com/article_detail_.+.html$')
-urls = ['https://med.sina.com/column/zonghe/', 'https://med.sina.com/feature_322.html',
-        'https://med.sina.com/feature_284.html', 'https://med.sina.com/feature_1341.html']
+urls = [
+    'https://med.sina.com/column/zonghe/',
+    'https://med.sina.com/feature_322.html',
+    'https://med.sina.com/feature_284.html',
+    'https://med.sina.com/feature_1341.html']
+
 next_url_prefix1 = 'https://med.sina.com/article_list_'
 next_url_prefix2 = 'https://med.sina.com/feature_list_'
 
@@ -88,6 +100,7 @@ class Handler(BaseHandler):
         self.save_to_mysql(ret)
         return ret
 
+    # 保存数据到数据库
     def save_to_mysql(self, ret):
         insert_sql = """
         INSERT INTO spider_med_sina(url, title, content, pub_date, source) values(%s, %s, %s, %s, %s)
