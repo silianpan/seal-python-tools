@@ -3,25 +3,26 @@
 # @Time    : 2020/11/5 4:54 下午
 # @Author  : silianpan
 # @Site    : 新浪医药新闻爬取
-# @File    : bio_yaozh.py
+# @File    : bio_med_sina.py
 # @Software: PyCharm
 
 import json
 import re
 
 import pymysql
-from fake_useragent import UserAgent
+# from fake_useragent import UserAgent
 from pyspider.libs.base_handler import *
 
 pattern_article = re.compile(u'^https://med.sina.com/article_detail_.+.html$')
+url_prefix = 'https://med.sina.com/'
 urls = [
-    'https://med.sina.com/column/zonghe/',
-    'https://med.sina.com/feature_322.html',
-    'https://med.sina.com/feature_284.html',
-    'https://med.sina.com/feature_1341.html']
+    {'url': 'article_list_103_2_%s_3554.html', 'max_page': 3600},
+    {'url': 'feature_list_322_%s_70.html', 'max_page': 80},
+    {'url': 'feature_list_284_%s_107.html', 'max_page': 110},
+    {'url': 'feature_list_1341_%s_33.html', 'max_page': 40}
+]
 
-next_url_prefix1 = 'https://med.sina.com/article_list_'
-next_url_prefix2 = 'https://med.sina.com/feature_list_'
+userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36'
 
 
 class Handler(BaseHandler):
@@ -40,49 +41,17 @@ class Handler(BaseHandler):
 
     @every(minutes=24 * 60)
     def on_start(self):
-        for url in urls:
-            self.crawl(url, validate_cert=False, method='GET', callback=self.index_page, user_agent=UserAgent().random)
+        for item in urls:
+            for i in range(1, item['max_page']):
+                crawl_url = url_prefix + str(item['url'] % i)
+                self.crawl(crawl_url, validate_cert=False, method='GET', callback=self.item_page, user_agent=userAgent)
 
     @config(age=5 * 24 * 60 * 60)
-    def index_page(self, response):
-        next_page = response.doc('.show > .clickmore_f')
-        if next_page is None:
-            next_page = response.doc('.show > .clickmore_f')
-        if next_page is not None:
-            sign = next_page.attr('sign')
-            if sign is not None:
-                next_url = ''
-                new_sign = ''
-                signs = sign.strip().split('_')
-                if len(signs) == 4:
-                    next_sign = int(signs[2]) + 1
-                    new_sign = signs[0] + '_' + signs[1] + '_' + str(next_sign) + '_' + signs[3]
-                    next_url = next_url_prefix1 + new_sign + '.html'
-                else:
-                    next_sign = int(signs[1]) + 1
-                    new_sign = signs[0] + '_' + str(next_sign) + '_' + signs[2]
-                    next_url = next_url_prefix2 + new_sign + '.html'
-                self.crawl(next_url, validate_cert=False, method='GET', callback=self.next_index_page,
-                           user_agent=UserAgent().random, save={'new_sign': new_sign})
-        self.item_page(response)
-
-    def next_index_page(self, response):
-        new_sign = response.save['new_sign']
-        signs = new_sign.strip().split('_')
-        for i in range(2, 10000000000000):
-            next_url = ''
-            if len(signs) == 4:
-                next_url = next_url_prefix1 + signs[0] + '_' + signs[1] + '_' + str(i) + '_' + signs[3] + '.html'
-            else:
-                next_url = next_url_prefix2 + signs[0] + '_' + str(i) + '_' + signs[2] + '.html'
-            self.crawl(next_url, validate_cert=False, method='GET', callback=self.item_page,
-                       user_agent=UserAgent().random)
-
     def item_page(self, response):
-        ua = UserAgent()
+        # ua = UserAgent()
         for each in response.doc('a[href^="http"]').items():
             if re.match(pattern_article, each.attr.href):
-                self.crawl(each.attr.href, validate_cert=False, callback=self.detail_page, user_agent=ua.random)
+                self.crawl(each.attr.href, validate_cert=False, callback=self.detail_page, user_agent=userAgent)
 
     @config(priority=2)
     def detail_page(self, response):

@@ -10,12 +10,13 @@ import json
 import re
 
 import pymysql
-from fake_useragent import UserAgent
+# from fake_useragent import UserAgent
 from pyspider.libs.base_handler import *
 
 # 正则表达式
 pattern_article = re.compile(u'^https://db.yaozh.com/policies/.+.html$')
 pageSize = 20
+userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36'
 
 common_headers = {
     'Referer': 'https://db.yaozh.com/policies?p=1&pageSize=20',
@@ -59,8 +60,8 @@ class Handler(BaseHandler):
     @every(minutes=24 * 60)
     def on_start(self):
         self.crawl('https://db.yaozh.com/policies', method='GET', params={'p': 1, 'pageSize': pageSize},
-                   save={'p': 1},
-                   callback=self.index_page, user_agent=UserAgent().random)
+                   save={'p': 1}, validate_cert=False,
+                   callback=self.index_page, user_agent=userAgent)
 
     @config(age=5 * 24 * 60 * 60)
     def index_page(self, response):
@@ -69,17 +70,17 @@ class Handler(BaseHandler):
         if 1 <= current_index < int(page_size):
             self.crawl('https://db.yaozh.com/policies', method='GET',
                        params={'p': current_index + 1, 'pageSize': pageSize},
-                       save={'p': current_index + 1},
-                       callback=self.index_page, user_agent=UserAgent().random)
+                       save={'p': current_index + 1}, validate_cert=False,
+                       callback=self.index_page, user_agent=userAgent)
         # 逐条处理
         self.item_page(response)
 
     def item_page(self, response):
-        ua = UserAgent()
+        # ua = UserAgent()
         for each in response.doc('a[href^="http"]').items():
             if re.match(pattern_article, each.attr.href):
                 title = each.text().strip()
-                self.crawl(each.attr.href, callback=self.detail_page, user_agent=ua.random)
+                self.crawl(each.attr.href, validate_cert=False, callback=self.detail_page, user_agent=userAgent)
 
     @config(priority=2)
     def detail_page(self, response):
