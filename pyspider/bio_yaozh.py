@@ -6,6 +6,8 @@
 # @File    : bio_yaozh.py
 # @Software: PyCharm
 
+import calendar
+import datetime
 import json
 import re
 
@@ -15,32 +17,62 @@ from pyspider.libs.base_handler import *
 
 # 正则表达式
 pattern_article = re.compile(u'^https://db.yaozh.com/policies/.+.html$')
-pageSize = 20
+start_url = 'https://db.yaozh.com/policies'
+start_params = {
+    'p': 1,
+    'pageSize': 20,
+    'policies_force': '全部',
+    'policies_source': '全部',
+    'policies_zhuangtai': '全部'
+}
 userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36'
 
-common_headers = {
-    'Referer': 'https://db.yaozh.com/policies?p=1&pageSize=20',
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-    'Accept-Encoding': 'gzip, deflate, br',
-    'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8,ja;q=0.7',
-    'Connection': 'keep-alive',
-    'Host': 'db.yaozh.com',
-    'Sec-Fetch-Dest': 'document',
-    'Sec-Fetch-Mode': 'navigate',
-    'Sec-Fetch-Site': 'same-origin',
-    'Sec-Fetch-User': '?1',
-    'Upgrade-Insecure-Requests': '1'
-}
 
-common_detail_headers = {
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-    'Accept-Encoding': 'gzip, deflate',
-    'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8,ja;q=0.7',
-    'Cache-Control': 'max-age=0',
-    'Connection': 'keep-alive',
-    'Host': 'www.pkulaw.cn',
-    'Upgrade-Insecure-Requests': '1'
-}
+# common_headers = {
+#     'Referer': 'https://db.yaozh.com/policies?p=1&pageSize=20',
+#     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+#     'Accept-Encoding': 'gzip, deflate, br',
+#     'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8,ja;q=0.7',
+#     'Connection': 'keep-alive',
+#     'Host': 'db.yaozh.com',
+#     'Sec-Fetch-Dest': 'document',
+#     'Sec-Fetch-Mode': 'navigate',
+#     'Sec-Fetch-Site': 'same-origin',
+#     'Sec-Fetch-User': '?1',
+#     'Upgrade-Insecure-Requests': '1'
+# }
+#
+# common_detail_headers = {
+#     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+#     'Accept-Encoding': 'gzip, deflate',
+#     'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8,ja;q=0.7',
+#     'Cache-Control': 'max-age=0',
+#     'Connection': 'keep-alive',
+#     'Host': 'www.pkulaw.cn',
+#     'Upgrade-Insecure-Requests': '1'
+# }
+
+def get_time_range_list(startdate, enddate):
+    """
+    获取时间参数列表
+    :param startdate: 起始月初时间 --> str
+    :param enddate: 结束时间 --> str
+    :return: date_range_list -->list
+    """
+    date_range_list = []
+    startdate = datetime.datetime.strptime(startdate, '%Y-%m-%d')
+    enddate = datetime.datetime.strptime(enddate, '%Y-%m-%d')
+    while 1:
+        next_month = startdate + datetime.timedelta(days=calendar.monthrange(startdate.year, startdate.month)[1])
+        month_end = next_month - datetime.timedelta(days=1)
+        if month_end < enddate:
+            date_range_list.append((datetime.datetime.strftime(startdate,
+                                                               '%Y-%m-%d'),
+                                    datetime.datetime.strftime(month_end,
+                                                               '%Y-%m-%d')))
+            startdate = next_month
+        else:
+            return date_range_list
 
 
 class Handler(BaseHandler):
@@ -50,6 +82,7 @@ class Handler(BaseHandler):
         self.conn = pymysql.connect(host='172.16.95.1', user='root', password='Asdf@123', port=3306,
                                     db='db-biotown-gdss')
         self.cursor = self.conn.cursor()
+        self.month_ranges = get_time_range_list('2000-01-01', '2021-01-01')
 
     def __del__(self):
         self.conn.close()
@@ -59,18 +92,23 @@ class Handler(BaseHandler):
 
     @every(minutes=24 * 60)
     def on_start(self):
-        self.crawl('https://db.yaozh.com/policies', method='GET', params={'p': 1, 'pageSize': pageSize},
-                   save={'p': 1}, validate_cert=False,
-                   callback=self.index_page, user_agent=userAgent)
+        for month_range in self.month_ranges:
+            m_params = dict(start_params.items() + {'policies_approvaldatestr': month_range[0], 'policies_approvaldateend': month_range[1]}.items())
+            self.crawl(start_url, method='GET',
+                       params=m_params,
+                       save=m_params,
+                       validate_cert=False,
+                       callback=self.index_page, user_agent=userAgent)
 
     @config(age=5 * 24 * 60 * 60)
     def index_page(self, response):
         current_index = response.save['p']
-        page_size = response.doc('div[data-widget="dbPagination"]').attr('data-max-page')
-        if 1 <= current_index < int(page_size):
-            self.crawl('https://db.yaozh.com/policies', method='GET',
-                       params={'p': current_index + 1, 'pageSize': pageSize},
-                       save={'p': current_index + 1}, validate_cert=False,
+        max_page_size = response.doc('div[data-widget="dbPagination"]').attr('data-max-page')
+        if 1 <= current_index < int(max_page_size):
+            m_params = dict(response.save.items() + {'p': current_index + 1}.items())
+            self.crawl(start_url, method='GET',
+                       params=m_params,
+                       save=m_params, validate_cert=False,
                        callback=self.index_page, user_agent=userAgent)
         # 逐条处理
         self.item_page(response)
@@ -79,7 +117,7 @@ class Handler(BaseHandler):
         # ua = UserAgent()
         for each in response.doc('a[href^="http"]').items():
             if re.match(pattern_article, each.attr.href):
-                title = each.text().strip()
+                # title = each.text().strip()
                 self.crawl(each.attr.href, validate_cert=False, callback=self.detail_page, user_agent=userAgent)
 
     @config(priority=2)
