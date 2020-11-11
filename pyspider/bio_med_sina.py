@@ -56,7 +56,12 @@ class Handler(BaseHandler):
     @config(priority=2)
     def detail_page(self, response):
         title = response.doc('.news > h1.news-title').text().strip()
-        source = response.doc('.news > .wz-tbbox > .wz-zuthorname > em').text().strip()
+        source = response.doc('.news > .wz-tbbox > .wz-zuthorname > em').text()
+        if source is None:
+            source = response.doc('.news > .wz-tbbox > .wz-zuthorname').text().strip()
+            if u'来源' in source:
+                source = source.split(u'：')[1]
+        source = source.strip()
         pub_date = response.doc('.news > .wz-tbbox > .wz-fbtime').text().strip()
         content = response.doc('.news > .textbox').html().strip()
         ret = {
