@@ -12,9 +12,16 @@ import re
 import pymysql
 from pyspider.libs.base_handler import *
 
-pattern_article = re.compile(u'^http://www.ibiolake.com/bioWeb/news/allowAccess/getNewsById\?id=.+$')
-url_prefix = 'http://www.ibiolake.com'
 userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36'
+pattern_article = re.compile(u'^http://www.ibiolake.com/bioWeb/news/allowAccess/getNewsById\?id=.+$')
+
+start_url_prefix = 'http://www.ibiolake.com/bioWeb/news/allowAccess/getNewsList'
+# 分类爬取
+start_urls = [
+    {'newstype': 1, 'category2': u'国家政策', 'max_page': 76},
+    {'newstype': 2, 'category2': u'省市政策', 'max_page': 27},
+    {'newstype': 3, 'category2': u'东湖高新区政策', 'max_page': 5}
+]
 
 
 class Handler(BaseHandler):
@@ -33,17 +40,32 @@ class Handler(BaseHandler):
 
     @every(minutes=24 * 60)
     def on_start(self):
-        m_params = {'newstype': 1, 'page': 1, 'rows': 10}
-        self.crawl(url_prefix + '/bioWeb/news/allowAccess/getNewsList',
-                   params=m_params,
-                   save=m_params,
-                   validate_cert=False, method='GET', callback=self.item_page, user_agent=userAgent)
+        for start_url in start_urls:
+            # 开始爬取列表
+            m_params = {'newstype': start_url['newstype'], 'page': 1, 'rows': 10, 'category2': start_url['category2'],
+                        'max_page': start_url['max_page']}
+            self.crawl(start_url_prefix, params=m_params, save=m_params,
+                       validate_cert=False, method='GET', callback=self.next_page, user_agent=userAgent)
 
     @config(age=5 * 24 * 60 * 60)
+    def next_page(self, response):
+        # 爬取详细文章
+        self.crawl(start_url_prefix, params=response.save, save=response.save,
+                   validate_cert=False, method='GET', callback=self.item_page, user_agent=userAgent)
+        # 继续爬取列表
+        max_page = int(response.save['max_page'])
+        page = int(response.save['page'])
+        if page <= max_page:
+            new_params = response.save
+            new_params['page'] = page + 1
+            self.crawl(start_url_prefix, params=new_params, save=new_params,
+                       validate_cert=False, method='GET', callback=self.next_page, user_agent=userAgent)
+
     def item_page(self, response):
         for each in response.doc('a[href]').items():
             if re.match(pattern_article, each.attr.href):
-                self.crawl(each.attr.href, validate_cert=False, callback=self.detail_page, user_agent=userAgent)
+                self.crawl(each.attr.href, validate_cert=False, save={'category2': response.save['category2']},
+                           callback=self.detail_page, user_agent=userAgent)
 
     @config(priority=2)
     def detail_page(self, response):
@@ -68,7 +90,9 @@ class Handler(BaseHandler):
             'content': content.replace('\xa0', '&nbsp;').replace('\t', '').replace('\n', ''),
             'pub_date': pub_date,
             'source': source,
-            'click_num': click_num
+            'click_num': click_num,
+            'category1': u'政策法规',
+            'category2': response.save['category2']
         }
         self.save_to_mysql(ret)
         return ret
@@ -76,12 +100,13 @@ class Handler(BaseHandler):
     # 保存数据到数据库
     def save_to_mysql(self, ret):
         insert_sql = """
-        INSERT INTO spider_ibiolake_law(url, title, content, pub_date, source, click_num) values(%s, %s, %s, %s, %s, %s)
+        INSERT INTO spider_ibiolake_law(url, title, content, pub_date, source, click_num, category1, category2) values(%s, %s, %s, %s, %s, %s, %s, %s)
         """
         try:
             self.cursor.execute(insert_sql, (
                 ret.get('url', ''), ret.get('title', ''), ret.get('content', ''),
-                ret.get('pub_date', ''), ret.get('source', ''), ret.get('click_num', '')))
+                ret.get('pub_date', ''), ret.get('source', ''), ret.get('click_num', ''),
+                ret.get('category1', ''), ret.get('category2', '')))
             self.conn.commit()
         except pymysql.err.IntegrityError:
             print('Repeat Key')
