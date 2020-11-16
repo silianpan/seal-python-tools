@@ -44,18 +44,17 @@ class Handler(BaseHandler):
             # 开始爬取列表
             m_params = {'newstype': start_url['newstype'], 'page': 1, 'rows': 10, 'category2': start_url['category2'],
                         'max_page': start_url['max_page']}
-            self.crawl(start_url_prefix+'?_=start', params=m_params, save=m_params,
+            self.crawl(start_url_prefix, params=m_params, save=m_params,
                        validate_cert=False, method='GET', callback=self.next_page, user_agent=userAgent)
 
     @config(age=5 * 24 * 60 * 60)
     def next_page(self, response):
         # 爬取详细文章
-        self.crawl(start_url_prefix, params=response.save, save=response.save,
-                   validate_cert=False, method='GET', callback=self.item_page, user_agent=userAgent)
+        self.item_page(response)
         # 继续爬取列表
         max_page = int(response.save['max_page'])
         page = int(response.save['page'])
-        if page <= max_page:
+        if page < max_page:
             new_params = response.save
             new_params['page'] = page + 1
             self.crawl(start_url_prefix, params=new_params, save=new_params,
