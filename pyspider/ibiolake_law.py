@@ -9,6 +9,10 @@
 import json
 import re
 
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
+
 import pymysql
 from pyspider.libs.base_handler import *
 
@@ -74,7 +78,7 @@ class Handler(BaseHandler):
         source = ''
         click_num = ''
         if alls is not None:
-            ss = alls.split('\xa0')
+            ss = alls.split(u'\xa0')
             for si in ss:
                 if u'发布时间' in si:
                     pub_date = si.split('：')[1].strip()
