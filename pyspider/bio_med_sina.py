@@ -57,7 +57,7 @@ class Handler(BaseHandler):
     def detail_page(self, response):
         title = response.doc('.news > h1.news-title').text().strip()
         source = response.doc('.news > .wz-tbbox > .wz-zuthorname > em').text()
-        if source is None:
+        if source is None or source == '' or source.strip() == '':
             source = response.doc('.news > .wz-tbbox > .wz-zuthorname').text().strip()
             if u'来源' in source:
                 source = source.split(u'：')[1]
