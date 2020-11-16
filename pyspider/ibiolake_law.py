@@ -87,7 +87,7 @@ class Handler(BaseHandler):
         ret = {
             'url': response.url,
             'title': title,
-            'content': content.replace('\xa0', '&nbsp;').replace('\t', '').replace('\n', ''),
+            'content': content.replace(u'\xa0', '').replace(u'\t', '').replace(u'\n', '').replace(u'\u2002', '').replace(u'\u3000', ''),
             'pub_date': pub_date,
             'source': source,
             'click_num': click_num,
