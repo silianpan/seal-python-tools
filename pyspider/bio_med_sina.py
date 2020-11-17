@@ -48,10 +48,17 @@ class Handler(BaseHandler):
 
     @config(age=5 * 24 * 60 * 60)
     def item_page(self, response):
+        for each in response.doc('li').items():
+            left = each('.indextext-left')
+            thumbnail = ''
+            if left is not None:
+                thumbnail = left('a > img').attr('src')
+            att_href = each('.indextext-right > .indextitle-text > a').attr('href')
+            self.crawl(att_href, validate_cert=False, save={'thumbnail': thumbnail}, callback=self.detail_page, user_agent=userAgent)
         # ua = UserAgent()
-        for each in response.doc('a[href^="http"]').items():
-            if re.match(pattern_article, each.attr.href):
-                self.crawl(each.attr.href, validate_cert=False, callback=self.detail_page, user_agent=userAgent)
+        # for each in response.doc('a[href^="http"]').items():
+        #     if re.match(pattern_article, each.attr.href):
+        #         self.crawl(each.attr.href, validate_cert=False, callback=self.detail_page, user_agent=userAgent)
 
     @config(priority=2)
     def detail_page(self, response):
@@ -69,7 +76,8 @@ class Handler(BaseHandler):
             'title': title,
             'content': content,
             'pub_date': pub_date,
-            'source': source
+            'source': source,
+            'thumbnail': response.save['thumbnail']
         }
         self.save_to_mysql(ret)
         return ret
@@ -77,12 +85,12 @@ class Handler(BaseHandler):
     # 保存数据到数据库
     def save_to_mysql(self, ret):
         insert_sql = """
-        INSERT INTO spider_realtime_info(url, title, content, pub_date, source) values(%s, %s, %s, %s, %s)
+        INSERT INTO spider_realtime_info(url, title, content, pub_date, source, thumbnail) values(%s, %s, %s, %s, %s, %s)
         """
         try:
             self.cursor.execute(insert_sql, (
                 ret.get('url', ''), ret.get('title', ''), ret.get('content', ''),
-                ret.get('pub_date', ''), ret.get('source', '')))
+                ret.get('pub_date', ''), ret.get('source', ''), ret.get('thumbnail', '')))
             self.conn.commit()
         except pymysql.err.IntegrityError:
             print('Repeat Key')
