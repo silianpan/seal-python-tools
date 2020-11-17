@@ -27,31 +27,6 @@ start_params = {
 }
 userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36'
 
-
-# common_headers = {
-#     'Referer': 'https://db.yaozh.com/policies?p=1&pageSize=20',
-#     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-#     'Accept-Encoding': 'gzip, deflate, br',
-#     'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8,ja;q=0.7',
-#     'Connection': 'keep-alive',
-#     'Host': 'db.yaozh.com',
-#     'Sec-Fetch-Dest': 'document',
-#     'Sec-Fetch-Mode': 'navigate',
-#     'Sec-Fetch-Site': 'same-origin',
-#     'Sec-Fetch-User': '?1',
-#     'Upgrade-Insecure-Requests': '1'
-# }
-#
-# common_detail_headers = {
-#     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-#     'Accept-Encoding': 'gzip, deflate',
-#     'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8,ja;q=0.7',
-#     'Cache-Control': 'max-age=0',
-#     'Connection': 'keep-alive',
-#     'Host': 'www.pkulaw.cn',
-#     'Upgrade-Insecure-Requests': '1'
-# }
-
 def get_time_range_list(startdate, enddate):
     """
     获取时间参数列表
@@ -80,7 +55,7 @@ class Handler(BaseHandler):
 
     def __init__(self):
         self.conn = pymysql.connect(host='172.16.95.1', user='root', password='Asdf@123', port=3306,
-                                    db='db-biotown-gdss')
+                                    db='db-biotown-policy')
         self.cursor = self.conn.cursor()
         self.month_ranges = get_time_range_list('2000-01-01', '2021-01-01')
 
@@ -159,7 +134,7 @@ class Handler(BaseHandler):
     # 保存到mysql
     def save_to_mysql(self, ret):
         insert_sql = """
-        INSERT INTO spider_yaozh(url, title, content, pub_dept, pub_no, pub_date, impl_date, force_level, time_valid) values(%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO spider_bio_policy(url, title, content, pub_dept, pub_no, pub_date, impl_date, force_level, time_valid) values(%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         try:
             self.cursor.execute(insert_sql, (

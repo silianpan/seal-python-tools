@@ -30,7 +30,7 @@ class Handler(BaseHandler):
 
     def __init__(self):
         self.conn = pymysql.connect(host='172.16.95.1', user='root', password='Asdf@123', port=3306,
-                                    db='db-biotown-gdss')
+                                    db='db-biotown-realtime-info')
         self.cursor = self.conn.cursor()
 
     def __del__(self):
@@ -77,7 +77,7 @@ class Handler(BaseHandler):
     # 保存数据到数据库
     def save_to_mysql(self, ret):
         insert_sql = """
-        INSERT INTO spider_med_sina(url, title, content, pub_date, source) values(%s, %s, %s, %s, %s)
+        INSERT INTO spider_realtime_info(url, title, content, pub_date, source) values(%s, %s, %s, %s, %s)
         """
         try:
             self.cursor.execute(insert_sql, (
