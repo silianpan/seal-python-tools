@@ -82,7 +82,7 @@ class Handler(BaseHandler):
                     source = si.split('：')[1].strip()
                 elif u'浏览次数' in si:
                     click_num = si.split('：')[1].strip()
-        content = response.doc('.talent_box > .form-group').html().strip()
+        content = response.doc('.form-group').html().strip()
         ret = {
             'url': response.url,
             'title': title,
