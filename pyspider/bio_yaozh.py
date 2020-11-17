@@ -12,7 +12,7 @@ import json
 import re
 
 import pymysql
-# from fake_useragent import UserAgent
+from fake_useragent import UserAgent
 from pyspider.libs.base_handler import *
 
 # 正则表达式
@@ -25,7 +25,7 @@ start_params = {
     'policies_source': '全部',
     'policies_zhuangtai': '全部'
 }
-userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36'
+# userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36'
 
 def get_time_range_list(startdate, enddate):
     """
@@ -73,7 +73,7 @@ class Handler(BaseHandler):
                        params=m_params,
                        save=m_params,
                        validate_cert=False,
-                       callback=self.index_page, user_agent=userAgent)
+                       callback=self.index_page, user_agent=UserAgent.random)
 
     @config(age=5 * 24 * 60 * 60)
     def index_page(self, response):
@@ -84,16 +84,16 @@ class Handler(BaseHandler):
             self.crawl(start_url, method='GET',
                        params=m_params,
                        save=m_params, validate_cert=False,
-                       callback=self.index_page, user_agent=userAgent)
+                       callback=self.index_page, user_agent=UserAgent.random)
         # 逐条处理
         self.item_page(response)
 
     def item_page(self, response):
-        # ua = UserAgent()
+        ua = UserAgent()
         for each in response.doc('a[href^="http"]').items():
             if re.match(pattern_article, each.attr.href):
                 # title = each.text().strip()
-                self.crawl(each.attr.href, validate_cert=False, callback=self.detail_page, user_agent=userAgent)
+                self.crawl(each.attr.href, validate_cert=False, callback=self.detail_page, user_agent=ua.random)
 
     @config(priority=2)
     def detail_page(self, response):
