@@ -9,6 +9,7 @@
 import json
 import os
 import time
+import requests
 
 import pathlib
 import pymysql
@@ -37,6 +38,7 @@ class Handler(BaseHandler):
     }
 
     def __init__(self):
+        self.custom_proxy = None
         self.spider_config = {
             "source_url": 'http://www.biobay.com.cn/investor/customer',
             'urls': [
@@ -70,8 +72,13 @@ class Handler(BaseHandler):
     def get_taskid(self, task):
         return md5string(task['url']) + json.dumps(task['fetch'].get('data', ''))
 
+    def get_proxy(self):
+        ret = requests.get('http://http.tiqu.letecs.com/getip3?num=1&type=1&pro=&city=0&yys=0&port=1&time=1&ts=0&ys=0&cs=0&lb=1&sb=0&pb=4&mr=1&regions=&gm=4').json()
+        return ret.get('data')[0].get('ip') + ':' + str(ret.get('data')[0].get('port'))
+
     @every(minutes=24 * 60)
     def on_start(self):
+        self.custom_proxy = self.get_proxy()
         for item in self.spider_config['urls']:
             m_params = {
                 'classify': item['classify'],
@@ -80,7 +87,7 @@ class Handler(BaseHandler):
             }
             self.crawl(self.spider_config['source_url'] + item['url'], fetch_type="js", save=m_params,
                        validate_cert=False, method='GET', callback=self.item_page,
-                       user_agent=UserAgent().random)
+                       user_agent=UserAgent().random, proxy=self.custom_proxy)
 
     @config(age=10 * 24 * 60 * 60)
     def item_page(self, response):
@@ -98,15 +105,18 @@ class Handler(BaseHandler):
                 'title': title,
                 'content': content
             }
-            self.detail_page(response, save)
+            # yield self.detail_page(response, save)
+            self.crawl('https://www.baidu.com/', fetch_type="js", save=save,
+                       validate_cert=False, method='GET', callback=self.detail_page,
+                       user_agent=UserAgent().random)
 
     @config(priority=2)
-    def detail_page(self, response, save):
+    def detail_page(self, response):
         ret = {
             'id': md5string(response.url),
             'url': response.url,
-            'title': save['title'],
-            'content': save['content'].replace(u'\xa0', '').replace(u'\t', '').replace(u'\n', '').replace(u'\u2002', '').replace(u'\u3000', ''),
+            'title': response.save['title'],
+            'content': response.save['content'].replace(u'\xa0', '').replace(u'\t', '').replace(u'\n', '').replace(u'\u2002', '').replace(u'\u3000', ''),
             'classify_name': response.save['classify_name'],
             'classify': response.save['classify']
         }
