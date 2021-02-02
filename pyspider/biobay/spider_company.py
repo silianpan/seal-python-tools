@@ -105,10 +105,10 @@ class Handler(BaseHandler):
                 'title': title,
                 'content': content
             }
-            # yield self.detail_page(response, save)
-            self.crawl('http://httpbin.org/get', fetch_type="js", save=save,
-                       validate_cert=False, method='GET', callback=self.detail_page,
-                       user_agent=UserAgent().random)
+            self.detail_page2(response, save)
+            # self.crawl('http://httpbin.org/get', fetch_type="js", save=save,
+            #            validate_cert=False, method='GET', callback=self.detail_page,
+            #            user_agent=UserAgent().random)
 
     @config(priority=2)
     def detail_page(self, response):
@@ -132,8 +132,7 @@ class Handler(BaseHandler):
             'id': md5string(response.url),
             'url': response.url,
             'title': save['title'],
-            'content': save['content'].replace(u'\xa0', '').replace(u'\t', '').replace(u'\n', '').replace(
-                u'\u2002', '').replace(u'\u3000', ''),
+            'content': save['content'].replace(u'\xa0', '').replace(u'\t', '').replace(u'\n', '').replace(u'\u2002', '').replace(u'\u3000', ''),
             'classify_name': response.save['classify_name'],
             'classify': response.save['classify']
         }
