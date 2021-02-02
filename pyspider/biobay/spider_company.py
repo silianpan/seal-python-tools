@@ -48,7 +48,7 @@ class Handler(BaseHandler):
                 {'url': '/shengwujishu/', 'classify': 'enterprise', 'classify_name': u'入驻客户'}
             ],
             'db': {
-                'host': '192.168.1.14',
+                'host': '172.19.249.124',
                 'user': 'root',
                 'password': 'Asdf@123',
                 'port': 3306,
@@ -73,7 +73,7 @@ class Handler(BaseHandler):
         return md5string(task['url']) + json.dumps(task['fetch'].get('data', ''))
 
     def get_proxy(self):
-        ret = requests.get('http://http.tiqu.letecs.com/getip3?num=1&type=1&pro=&city=0&yys=0&port=1&time=1&ts=0&ys=0&cs=0&lb=1&sb=0&pb=4&mr=1&regions=&gm=4').json()
+        ret = requests.get('http://http.tiqu.letecs.com/getip3?num=1&type=2&pro=&city=0&yys=0&port=1&time=1&ts=0&ys=0&cs=0&lb=1&sb=0&pb=4&mr=1&regions=&gm=4').json()
         return ret.get('data')[0].get('ip') + ':' + str(ret.get('data')[0].get('port'))
 
     @every(minutes=24 * 60)
@@ -106,7 +106,7 @@ class Handler(BaseHandler):
                 'content': content
             }
             # yield self.detail_page(response, save)
-            self.crawl('https://www.baidu.com/', fetch_type="js", save=save,
+            self.crawl('http://httpbin.org/get', fetch_type="js", save=save,
                        validate_cert=False, method='GET', callback=self.detail_page,
                        user_agent=UserAgent().random)
 
@@ -117,6 +117,23 @@ class Handler(BaseHandler):
             'url': response.url,
             'title': response.save['title'],
             'content': response.save['content'].replace(u'\xa0', '').replace(u'\t', '').replace(u'\n', '').replace(u'\u2002', '').replace(u'\u3000', ''),
+            'classify_name': response.save['classify_name'],
+            'classify': response.save['classify']
+        }
+        local_json_file = self.build_local_json_file(response)
+        ret['json_url'] = local_json_file['json_url']
+        self.save_to_json(local_json_file['file_path'], ret)
+        self.save_to_mysql(self.spider_config['db']['table_name'], ret)
+        return ret
+
+    @config(priority=2)
+    def detail_page2(self, response, save):
+        ret = {
+            'id': md5string(response.url),
+            'url': response.url,
+            'title': save['title'],
+            'content': save['content'].replace(u'\xa0', '').replace(u'\t', '').replace(u'\n', '').replace(
+                u'\u2002', '').replace(u'\u3000', ''),
             'classify_name': response.save['classify_name'],
             'classify': response.save['classify']
         }
