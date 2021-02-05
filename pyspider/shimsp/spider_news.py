@@ -76,7 +76,7 @@ class Handler(BaseHandler):
         boxs = response.doc('.news-content-tab-list > .news-content-tab-item').items()
         for box in boxs:
             art_href = box('a').attr('href')
-            thumbnail = box('a > img').attr('src')
+            thumbnail = box('a > img.news-content-tab-img').attr('src')
             pub_date = box(
                 '.news-content-tab-item-desc > .news_content_item_icon > .news_content_item_icon1').text().strip()
             self.crawl(art_href, validate_cert=False,
