@@ -77,7 +77,7 @@ class Handler(BaseHandler):
         # 爬取详细文章
         self.item_page(response)
         # 继续爬取下一页列表
-        next_page = response.doc('div.fenye > ul > li:last').attr('class')
+        next_page = response.doc('div.fenye > ul > .active').attr('class')
         if next_page is not None and next_page == 'active':
             new_params = response.save
             new_params['pageNo'] = int(new_params['pageNo']) + 1
@@ -106,7 +106,7 @@ class Handler(BaseHandler):
         ret = {
             'id': md5string(response.url),
             'url': response.url,
-            'title': title.replace(u'-优惠政策-上海招商网|招商网络', '').replace(u'-今日资讯-上海招商网|招商网络', ''),
+            'title': title,
             'content': content.replace(u'\xa0', '').replace(u'\t', '').replace(u'\n', '').replace(u'\u2002', '').replace(u'\u3000', ''),
             'pub_date': response.save['pub_date'],
             'others': {'source': source},
