@@ -16,6 +16,7 @@ cx-oracle = "*"
 pdfminer3k = "*"
 python-docx = "*"
 pdf2docx = "*"
+exifread = "*"
 
 [requires]
 python_version = "3.7"
