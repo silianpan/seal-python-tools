@@ -20,6 +20,8 @@ exifread = "*"
 selenium = "*"
 torchvision = "*"
 reportlab = "*"
+comtypes = "*"
+pywin32 = "*"
 
 [requires]
 python_version = "3.7"
