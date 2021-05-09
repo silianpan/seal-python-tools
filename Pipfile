@@ -22,6 +22,11 @@ torchvision = "*"
 reportlab = "*"
 comtypes = "*"
 pywin32 = "*"
+xlwings = "*"
+pandas = "*"
+python-pptx = "*"
+requests = "*"
+schedule = "*"
 
 [requires]
 python_version = "3.7"
