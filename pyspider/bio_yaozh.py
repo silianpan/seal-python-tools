@@ -9,7 +9,11 @@
 import calendar
 import datetime
 import json
+import os
+import pathlib
 import re
+import time
+from urllib.parse import urlparse
 
 import pymysql
 from fake_useragent import UserAgent
@@ -25,6 +29,8 @@ start_params = {
     'policies_source': '全部',
     'policies_zhuangtai': '全部'
 }
+
+
 # userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36'
 
 def get_time_range_list(startdate, enddate):
@@ -54,7 +60,7 @@ class Handler(BaseHandler):
     crawl_config = {}
 
     def __init__(self):
-        self.conn = pymysql.connect(host='172.16.95.1', user='root', password='Asdf@123', port=3306,
+        self.conn = pymysql.connect(host='172.21.242.10', user='root', password='Asdf@123', port=3306,
                                     db='db-biotown-policy')
         self.cursor = self.conn.cursor()
         self.month_ranges = get_time_range_list('2000-01-01', '2021-01-01')
@@ -68,23 +74,24 @@ class Handler(BaseHandler):
     @every(minutes=24 * 60)
     def on_start(self):
         for month_range in self.month_ranges:
-            m_params = dict(start_params.items() + {'policies_approvaldatestr': month_range[0], 'policies_approvaldateend': month_range[1]}.items())
+            m_params = dict(**start_params, **{'policies_approvaldatestr': month_range[0],
+                                               'policies_approvaldateend': month_range[1]})
             self.crawl(start_url, method='GET',
                        params=m_params,
                        save=m_params,
                        validate_cert=False,
-                       callback=self.index_page, user_agent=UserAgent.random)
+                       callback=self.index_page, user_agent=UserAgent().random)
 
     @config(age=5 * 24 * 60 * 60)
     def index_page(self, response):
         current_index = response.save['p']
         max_page_size = response.doc('div[data-widget="dbPagination"]').attr('data-max-page')
         if 1 <= current_index < int(max_page_size):
-            m_params = dict(response.save.items() + {'p': current_index + 1}.items())
+            m_params = dict(**response.save, **{'p': current_index + 1})
             self.crawl(start_url, method='GET',
                        params=m_params,
                        save=m_params, validate_cert=False,
-                       callback=self.index_page, user_agent=UserAgent.random)
+                       callback=self.index_page, user_agent=UserAgent().random)
         # 逐条处理
         self.item_page(response)
 
@@ -128,8 +135,40 @@ class Handler(BaseHandler):
         ret['title'] = title
         ret['content'] = one.html().strip()
 
+        json_file = self.build_local_json_file(response);
+        ret['json_url'] = json_file['json_url']
+        self.save_to_json(json_file['file_path'], ret)
+
         self.save_to_mysql(ret)
         return ret
+
+    # 构建本地存储json文件
+    def build_local_json_file(self, response):
+        pr = urlparse(response.url)
+        partitions = pr.path.partition('.')
+        out_dir = '/home/tmp/output/'
+        # db.yaozh.com => dbyaozhcom
+        source = pr.netloc.replace('.', '')
+        # 日期：2020-11-12
+        now_day = time.strftime('%Y-%m-%d', time.localtime())
+        # /Users/hsc/CodeWorkSpace/projects/tianfu-bio-town/code/biotown-parent/spider/dbyaozhcom
+        p_dir = os.path.join(out_dir, "{0}/{1}".format(source, now_day))
+        # /policies/6247.json
+        file_name = partitions[0] + '.json'
+        return {
+            # dbyaozhcom/2020-11-12/policies/6247.json
+            "json_url": "{0}/{1}{2}".format(source, now_day, file_name),
+            # /Users/hsc/CodeWorkSpace/projects/tianfu-bio-town/code/biotown-parent/spider/dbyaozhcom/policies/6247.json
+            "file_path": p_dir + file_name
+        }
+
+    # 存储到文件中
+    def save_to_json(self, filePath, data):
+        dir_name = os.path.dirname(filePath)
+        pathlib.Path(dir_name).mkdir(parents=True, exist_ok=True)
+        json_str = json.dumps(data, ensure_ascii=False)
+        with open(filePath, 'w', encoding='utf-8') as json_file:
+            json_file.write(json_str)
 
     # 保存到mysql
     def save_to_mysql(self, ret):
