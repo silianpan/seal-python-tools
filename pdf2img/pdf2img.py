@@ -28,7 +28,7 @@ def pyMuPDF_fitz(pdfPath, imagePath):
         if not os.path.exists(imagePath):  # 判断存放图片的文件夹是否存在
             os.makedirs(imagePath)  # 若图片文件夹不存在就创建
 
-        pix.writePNG(imagePath + '/' + '新农合_%s.png' % pg)  # 将图片写入指定的文件夹内
+        pix.writePNG(imagePath + '/' + '北斗_%s.png' % pg)  # 将图片写入指定的文件夹内
 
     endTime_pdf2img = datetime.datetime.now()  # 结束时间
     print('pdf2img时间=', (endTime_pdf2img - startTime_pdf2img).seconds)
@@ -54,7 +54,7 @@ def pyMuPDF2_fitz(pdfPath, imagePath):
 
 
 if __name__ == "__main__":
-    pdfPath = r'/Users/liupan/Downloads/（收入）ZXLJ201808-8169   2018年边坝县新型农村合作医疗信息结算系统项目.pdf'
-    imagePath = '/Users/liupan/Downloads/WPSPhoto/新农合'
+    pdfPath = r'/Users/liupan/Downloads/uploadPath/input/test.pdf'
+    imagePath = '/Users/liupan/Downloads/uploadPath/output'
     # pyMuPDF_fitz(pdfPath, imagePath)#只是转换图片
     pyMuPDF_fitz(pdfPath, imagePath)  # 指定想要的区域转换成图片
