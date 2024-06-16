@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2021-01-27
 # @Author  : silianpan
-# @Site    : 国家电网-旗帜领航-专题专栏
+# @Site    : 四川电力-新闻动态
 # @File    : spider_news.py
 # @Software: PyCharm
 
@@ -20,24 +20,29 @@ class Handler(BaseHandler):
     crawl_config = {
         'headers': {
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-            'Accept-Encoding': 'gzip, deflate',
+            'Accept-Encoding': 'gzip, deflate, br, zstd',
             'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8,ja;q=0.7,zh-TW;q=0.6',
             'Cache-Control': 'max-age=0',
-            'Cookie': 'Rq9ZlcGkVvC3S=60krow3RM27oI7EaMaEmYqgtES_ByaGvNdoSaqdM9lZu6HFHaZjMQObOi2QdoU0P7Omq_vUwFFYWg9CdBV4VLqoq; Rq9ZlcGkVvC3T=0U.O6fCGCPsQgwLAwxp05_XlncBhTCh7UqqZI85RGO5jcDzxbEdRrpf9fMeQMrp5OKXGubspWZtbIlcNY1xApkOGlI7LtvVssfjKenC0WprLPVPspoD8cG1QcAeHeHQ0pgKJNwGTxbm.0ictrj1b0DnYiBuYER_uehzr3xfr_k1CrYin3gHntxZl2btoB_DftC_fSgln5YrSOhrZq0endnMweK0dgM6.F8.wxGPER8FIY4hIiJuWM6Z8z27XhGR8ZBT1CH3o4gAqO6b1YoVBw1XaxORS092d74PKgC2QEbYE3VTRHu5l2itv7ITZ2eztIFy7Bk1onU0jMgFaFw_VraUnEF8U1qIRS_54esepy2xSJx9LD2iCjQfA71ZCg7zFkCaFVxK5SnNIk2cDVzGYRAHCpwiMMqv.7ZgjSKK8JPLl',
-            'Host': 'www.sgcc.com.cn',
-            'Proxy-Connection': 'keep-alive',
-            'Referer': 'http://www.sgcc.com.cn/html/sgcc/col2022121491/column_2022121491_1.shtml',
+            'Host': 'www.sc.sgcc.com.cn',
+            'If-None-Match': 'W/"665ed489-4f10"',
+            'Referer': 'https://www.sc.sgcc.com.cn/html/main/col3/column_3_1.html',
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+            'Sec-Ch-Ua': '"Not/A)Brand";v="8", "Chromium";v="126", "Google Chrome";v="126"',
+            'Sec-Ch-Ua-Mobile': '?0',
+            'Sec-Ch-Ua-Platform': '"macOS"',
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'same-origin',
+            'Sec-Fetch-User': '?1',
             'Upgrade-Insecure-Requests': '1',
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
         }
     }
 
     def __init__(self):
         self.spider_config = {
-            "source_url": 'http://www.sgcc.com.cn/html/sgcc',
+            "source_url": 'https://www.sc.sgcc.com.cn/html/main',
             'urls': [
-                {'url': '/col2022121491/column_2022121491_1.shtml', 'classify': 'zyjh', 'classify_name': u'重要讲话'},
-                {'url': '/col2022121473/column_2022121473_1.shtml#here', 'classify': 'xxqg', 'classify_name': u'学习强国'}
+                {'url': '/col8/column_8_1.html', 'classify': 'gsyw', 'classify_name': u'公司要闻'},
             ],
             'db': {
                 'host': '39.98.39.58',
@@ -76,17 +81,17 @@ class Handler(BaseHandler):
         self.item_page(response)
 
     def item_page(self, response):
-        boxs = response.doc('.newslist > li').items()
+        boxs = response.doc('ul.list > li').items()
         for box in boxs:
             art_href = box('a').attr('href')
-            art_title = box('a').attr('title')
-            pub_date = box('i').text().strip()
+            art_title = box('a').text().strip()
+            pub_date = box('span').text().strip()
             self.crawl(art_href, validate_cert=False,
                        save={'pub_date': pub_date, 'title': art_title}, callback=self.detail_page)
 
     @config(priority=2)
     def detail_page(self, response):
-        content = response.doc('.mbox').html().strip()
+        content = response.doc('.txtcon').html().strip()
         obj = {
            'main': {
                'content': content,
