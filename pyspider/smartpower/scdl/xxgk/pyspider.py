@@ -2,14 +2,15 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2021-01-27
 # @Author  : silianpan
-# @Site    : 四川电力-新闻动态
-# @File    : scdl_xwdt.py
+# @Site    : 四川电力-信息公开
+# @File    : scdl_xxgk.py
 # @Software: PyCharm
 
 import json
 import os
 import time
 import base64
+import requests
 
 import pathlib
 import pymysql
@@ -44,10 +45,17 @@ class Handler(BaseHandler):
         self.spider_config = {
             "source_url": 'https://www.sc.sgcc.com.cn/html/main',
             'urls': [
-                {'url': '/col8/column_8_1.html', 'classify': 'gsyw', 'classify_name': u'公司要闻'},
-                {'url': '/col9/column_9_1.html', 'classify': 'zbdt', 'classify_name': u'总部动态'},
-                {'url': '/col81/column_81_1.html', 'classify': 'yxdt', 'classify_name': u'一线动态'},
-                {'url': '/col37/column_37_1.html', 'classify': 'mtjj', 'classify_name': u'媒体聚焦'},
+                {'url': '/col2795/column_2795_1.html', 'classify': 'gwscsdlgsjj', 'classify_name': u'国网四川省电力公司简介'},
+                {'url': '/col2794/column_2794_1.html', 'classify': 'blydywcxjsx', 'classify_name': u'办理用电业务程序及时限'},
+                {'url': '/col2796/column_2796_1.html', 'classify': 'gdqydjhsfbz', 'classify_name': u'供电企业电价和收费标准'},
+                {'url': '/col2799/column_2799_1.html', 'classify': 'gdzlhllqk', 'classify_name': u'供电质量和两率情况'},
+                {'url': '/col2798/column_2798_1.html', 'classify': 'gdfwxgflfg', 'classify_name': u'供电服务相关法律法规'},
+                {'url': '/col2800/column_2800_1.html', 'classify': 'fwcnjtsdh', 'classify_name': u'服务承诺及投诉电话'},
+                {'url': '/col2801/column_2801_1.html', 'classify': 'yhsdgcxgxx', 'classify_name': u'用户受电工程相关信息'},
+                {'url': '/col2803/column_2803_1.html', 'classify': 'scsnrgjjczbtgmhygfxmgs', 'classify_name': u'四川省纳入国家财政补贴规模户用光伏项目公示'},
+                {'url': '/col2804/column_2804_1.html', 'classify': 'dlgdygsxgg', 'classify_name': u'代理购电有关事项公告'},
+                {'url': '/col2791/column_2791_1.html', 'classify': 'ysqxxgknr', 'classify_name': u'依申请信息公开内容'},
+                {'url': '/col2792/column_2792_1.html', 'classify': 'xxgkzn', 'classify_name': u'信息公开指南'},
             ],
             'db': {
                 'host': '39.98.39.58',
@@ -55,11 +63,11 @@ class Handler(BaseHandler):
                 'password': 'Asdf@123',
                 'port': 3306,
                 'dbname': 'smartpower-spider',
-                'table_name': 'scdl_xwdt'
+                'table_name': 'scdl_xxgk'
             },
             # 存储到本地的文件夹
             'file': {
-                'out_dir': '/home/tmp/output/',
+                'out_dir': '/home/tmp/output/smartpower-spider/scdl/xxgk/',
             }
         }
         self.conn = pymysql.connect(host=self.spider_config['db']['host'], user=self.spider_config['db']['user'],
@@ -95,11 +103,19 @@ class Handler(BaseHandler):
         for box in boxs:
             art_href = box('a').attr('href')
             if 'portal.sc.sgcc.com.cn' not in art_href:
-                art_title = box('a').text().strip()
-                pub_date = box('span').text().strip()
-                self.crawl(art_href, validate_cert=False,
-                           save={'pub_date': pub_date, 'title': art_title, 'classify': response.save['classify'],
-                                 'classify_name': response.save['classify_name']}, callback=self.detail_page)
+                ## 判断是否是文档链接
+                file_ext = art_href[art_href.rfind('.') + 1:]
+                if file_ext in ['pdf', 'doc', 'xls', 'ppt', 'docx', 'xlsx', 'pptx', 'png', 'jpg']:
+                   self.download_file(art_href)
+                   file_name = art_href[art_href.rfind('/') + 1:]
+                   file_path = self.spider_config['file']['out_dir'] + file_name
+                   self.save_file_data(file_name, file_path, art_href, response.save)
+                else:
+                    art_title = box('a').text().strip()
+                    pub_date = box('span').text().strip()
+                    self.crawl(art_href, validate_cert=False,
+                               save={'pub_date': pub_date, 'title': art_title, 'classify': response.save['classify'],
+                                     'classify_name': response.save['classify_name']}, callback=self.detail_page)
 
     @config(priority=2)
     def detail_page(self, response):
@@ -120,10 +136,46 @@ class Handler(BaseHandler):
             'classify_name': response.save['classify_name'],
             'title': response.save['title'],
             'pub_date': response.save['pub_date'],
-            'json': json.dumps(obj, ensure_ascii=False,)
+            'json': json.dumps(obj, ensure_ascii=False)
         }
         self.save_to_mysql(self.spider_config['db']['table_name'], ret)
         return ret
+
+    # 保存文件数据
+    def save_file_data(self, file_name, file_path, url, save):
+        content = ''
+        with open(file_path, 'rb') as f:
+            content = base64.b64encode(f.read()).decode('utf-8')
+        print('=======read.file========')
+        print(content)
+        obj = {
+           'medias': [{
+               'content': content,
+               'filename': '/page-medias/' + file_name
+           }]
+        }
+        ret = {
+            'id': md5string(url),
+            'url': url,
+            'classify': save['classify'],
+            'classify_name': save['classify_name'],
+            'title': save['title'],
+            'pub_date': save['pub_date'],
+            'json': json.dumps(obj, ensure_ascii=False)
+        }
+        self.save_to_mysql(self.spider_config['db']['table_name'], ret)
+        return ret
+
+    # 下载文件
+    def download_file(self, file_url):
+        file_name = file_url[file_url.rfind('/') + 1:]
+        file_path = self.spider_config['file']['out_dir'] + file_name
+        res = requests.get(file_url, verify=False)
+        print('=======res.content========')
+        print(res.content)
+        with open(file_path, 'wb') as f:
+            f.write(res.content)
+        return file_name, file_path
 
     # 自动构建sql
     def build_insert_sql(self, table_name, fields):
