@@ -9,6 +9,7 @@
 import json
 import os
 import time
+import base64
 
 import pathlib
 import pymysql
@@ -102,9 +103,11 @@ class Handler(BaseHandler):
     @config(priority=2)
     def detail_page(self, response):
         content = response.doc('.txtcon').html().strip()
+        # b64encode函数的参数为byte类型，所以必须先转码
+        contentBytesString = content.encode('utf-8')
         obj = {
            'main': {
-               'content': content,
+               'content': str(base64.b64encode(contentBytesString), 'utf-8'),
                'filename': response.save['title'],
            },
            'medias': []
@@ -114,6 +117,8 @@ class Handler(BaseHandler):
             'url': response.url,
             'classify': response.save['classify'],
             'classify_name': response.save['classify_name'],
+            'title': response.save['title'],
+            'pub_date': response.save['pub_date'],
             'json': json.dumps(obj, ensure_ascii=False,)
         }
         self.save_to_mysql(self.spider_config['db']['table_name'], ret)
