@@ -18,6 +18,7 @@ from urllib.parse import urlparse
 
 class Handler(BaseHandler):
     crawl_config = {
+        'connect_timeout': 600,
         'headers': {
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
             'Accept-Encoding': 'gzip, deflate, br, zstd',
@@ -43,6 +44,9 @@ class Handler(BaseHandler):
             "source_url": 'https://www.sc.sgcc.com.cn/html/main',
             'urls': [
                 {'url': '/col8/column_8_1.html', 'classify': 'gsyw', 'classify_name': u'公司要闻'},
+                {'url': '/col9/column_9_1.html', 'classify': 'zbdt', 'classify_name': u'总部动态'},
+                {'url': '/col81/column_81_1.html', 'classify': 'yxdt', 'classify_name': u'一线动态'},
+                {'url': '/col37/column_37_1.html', 'classify': 'mtjj', 'classify_name': u'媒体聚焦'},
             ],
             'db': {
                 'host': '39.98.39.58',
@@ -50,7 +54,7 @@ class Handler(BaseHandler):
                 'password': 'Asdf@123',
                 'port': 3306,
                 'dbname': 'smartpower-spider',
-                'table_name': 'qzlh_ztzl'
+                'table_name': 'scdl_xwdt'
             },
             # 存储到本地的文件夹
             'file': {
@@ -72,13 +76,18 @@ class Handler(BaseHandler):
     @every(minutes=24 * 60)
     def on_start(self):
        for item in self.spider_config['urls']:
-           self.crawl(self.spider_config['source_url'] + item['url'], fetch_type="js",
+           self.crawl(self.spider_config['source_url'] + item['url'], save={'classify': item['classify'], 'classify_name': item['classify_name']},
                       validate_cert=False, method='GET', callback=self.next_page)
 
     @config(age=10 * 24 * 60 * 60)
     def next_page(self, response):
         # 爬取详细文章
         self.item_page(response)
+        pageCount = response.doc('.pagenav > form > #pagenavpagecount > b').text().strip()
+        for i in range(2, int(pageCount) + 1):
+            self.crawl(response.url.replace('1.html', str(i) + '.html'),
+                       save={'classify': response.save['classify'], 'classify_name': response.save['classify_name']},
+                       validate_cert=False, method='GET', callback=self.item_page)
 
     def item_page(self, response):
         boxs = response.doc('ul.list > li').items()
@@ -87,7 +96,8 @@ class Handler(BaseHandler):
             art_title = box('a').text().strip()
             pub_date = box('span').text().strip()
             self.crawl(art_href, validate_cert=False,
-                       save={'pub_date': pub_date, 'title': art_title}, callback=self.detail_page)
+                       save={'pub_date': pub_date, 'title': art_title, 'classify': response.save['classify'],
+                             'classify_name': response.save['classify_name']}, callback=self.detail_page)
 
     @config(priority=2)
     def detail_page(self, response):
@@ -101,6 +111,9 @@ class Handler(BaseHandler):
         }
         ret = {
             'id': md5string(response.url),
+            'url': response.url,
+            'classify': response.save['classify'],
+            'classify_name': response.save['classify_name'],
             'json': json.dumps(obj, ensure_ascii=False,)
         }
         self.save_to_mysql(self.spider_config['db']['table_name'], ret)
