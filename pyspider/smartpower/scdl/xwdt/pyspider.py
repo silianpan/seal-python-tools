@@ -94,11 +94,12 @@ class Handler(BaseHandler):
         boxs = response.doc('ul.list > li').items()
         for box in boxs:
             art_href = box('a').attr('href')
-            art_title = box('a').text().strip()
-            pub_date = box('span').text().strip()
-            self.crawl(art_href, validate_cert=False,
-                       save={'pub_date': pub_date, 'title': art_title, 'classify': response.save['classify'],
-                             'classify_name': response.save['classify_name']}, callback=self.detail_page)
+            if 'portal.sc.sgcc.com.cn' not in art_href:
+                art_title = box('a').text().strip()
+                pub_date = box('span').text().strip()
+                self.crawl(art_href, validate_cert=False,
+                           save={'pub_date': pub_date, 'title': art_title, 'classify': response.save['classify'],
+                                 'classify_name': response.save['classify_name']}, callback=self.detail_page)
 
     @config(priority=2)
     def detail_page(self, response):
