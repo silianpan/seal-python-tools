@@ -114,25 +114,26 @@ class Handler(BaseHandler):
         for box in boxs:
             art_href = box('a').attr('href')
             if 'portal.sc.sgcc.com.cn' not in art_href:
+                art_title = box('a').text().strip()
+                pub_date = box('span').text().strip()
+                save = {'pub_date': pub_date, 'title': art_title, 'classify': response.save['classify'],
+                        'classify_name': response.save['classify_name']}
                 ## 判断是否是文档链接
                 file_ext = art_href[art_href.rfind('.') + 1:]
                 if file_ext in ['pdf', 'doc', 'xls', 'ppt', 'docx', 'xlsx', 'pptx', 'png', 'jpg']:
                    self.download_file(art_href)
                    file_name = art_href[art_href.rfind('/') + 1:]
                    file_path = self.spider_config['file']['out_dir'] + file_name
-                   self.save_file_data(file_name, file_path, art_href, response.save)
+                   self.save_file_data(file_name, file_path, art_href, save)
                 else:
-                    art_title = box('a').text().strip()
-                    pub_date = box('span').text().strip()
                     self.crawl(art_href, validate_cert=False,
-                               save={'pub_date': pub_date, 'title': art_title, 'classify': response.save['classify'],
-                                     'classify_name': response.save['classify_name']}, callback=self.detail_page, proxy='http://{proxy}'.format(proxy=self.get_random_proxy()),
+                               save=save, callback=self.detail_page, proxy='http://{proxy}'.format(proxy=self.get_random_proxy()),
                                      user_agent=UserAgent().random)
 
     @config(priority=2)
     def detail_page(self, response):
         if response.status_code in [401, 403, 599]:
-            self.crawl(response.url, save={'classify': response.save['classify'], 'classify_name': response.save['classify_name']},
+            self.crawl(response.url, save={'classify': response.save['classify'], 'classify_name': response.save['classify_name'], 'title': response.save['title']},
                        validate_cer=False, method='GET', callback=self.item_page, proxy='http://{proxy}'.format(proxy=self.update_proxy()),
                        user_agent=UserAgent().random)
         content = response.doc('.txtcon').html().strip()
