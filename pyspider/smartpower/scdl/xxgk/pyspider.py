@@ -12,6 +12,7 @@ import time
 import base64
 import requests
 from datetime import datetime
+from fake_useragent import UserAgent
 
 import pathlib
 import pymysql
@@ -22,6 +23,7 @@ from urllib.parse import urlparse
 class Handler(BaseHandler):
     crawl_config = {
         'connect_timeout': 600,
+        # 'timeout': 2,
         'headers': {
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
             'Accept-Encoding': 'gzip, deflate, br, zstd',
@@ -88,7 +90,8 @@ class Handler(BaseHandler):
     def on_start(self):
        for item in self.spider_config['urls']:
            self.crawl(self.spider_config['source_url'] + item['url'], save={'classify': item['classify'], 'classify_name': item['classify_name']},
-                      validate_cert=False, method='GET', callback=self.next_page)
+                      validate_cert=False, method='GET', callback=self.next_page, proxy='http://{proxy}'.format(proxy=self.get_random_proxy()),
+                      user_agent=UserAgent().random)
 
     @config(age=10 * 24 * 60 * 60)
     def next_page(self, response):
@@ -98,13 +101,14 @@ class Handler(BaseHandler):
         for i in range(2, int(pageCount) + 1):
             self.crawl(response.url.replace('1.html', str(i) + '.html'),
                        save={'classify': response.save['classify'], 'classify_name': response.save['classify_name']},
-                       validate_cert=False, method='GET', callback=self.item_page, proxy='http://{proxy}'.format(proxy=self.get_random_proxy()))
+                       validate_cert=False, method='GET', callback=self.item_page, proxy='http://{proxy}'.format(proxy=self.get_random_proxy()),
+                       user_agent=UserAgent().random)
 
     def item_page(self, response):
-        if response.status == 403 or response.status == 599:
-            new_proxy = self.update_proxy()
+        if response.status_code in [401, 403, 599]:
             self.crawl(response.url, save={'classify': response.save['classify'], 'classify_name': response.save['classify_name']},
-                       validate_cer=False, method='GET', callback=self.item_page, proxy='http://{proxy}'.format(proxy=self.update_proxy()))
+                       validate_cer=False, method='GET', callback=self.item_page, proxy='http://{proxy}'.format(proxy=self.update_proxy()),
+                       user_agent=UserAgent().random)
 
         boxs = response.doc('ul.list > li').items()
         for box in boxs:
@@ -122,10 +126,15 @@ class Handler(BaseHandler):
                     pub_date = box('span').text().strip()
                     self.crawl(art_href, validate_cert=False,
                                save={'pub_date': pub_date, 'title': art_title, 'classify': response.save['classify'],
-                                     'classify_name': response.save['classify_name']}, callback=self.detail_page)
+                                     'classify_name': response.save['classify_name']}, callback=self.detail_page, proxy='http://{proxy}'.format(proxy=self.get_random_proxy()),
+                                     user_agent=UserAgent().random)
 
     @config(priority=2)
     def detail_page(self, response):
+        if response.status_code in [401, 403, 599]:
+            self.crawl(response.url, save={'classify': response.save['classify'], 'classify_name': response.save['classify_name']},
+                       validate_cer=False, method='GET', callback=self.item_page, proxy='http://{proxy}'.format(proxy=self.update_proxy()),
+                       user_agent=UserAgent().random)
         content = response.doc('.txtcon').html().strip()
         # b64encode函数的参数为byte类型，所以必须先转码
         contentBytesString = content.encode('utf-8')
@@ -177,7 +186,9 @@ class Handler(BaseHandler):
     def download_file(self, file_url):
         file_name = file_url[file_url.rfind('/') + 1:]
         file_path = self.spider_config['file']['out_dir'] + file_name
-        res = requests.get(file_url, verify=False)
+        new_proxy = 'http://{proxy}'.format(proxy=self.get_random_proxy())
+        proxies = {'http': new_proxy, 'https': new_proxy}
+        res = requests.get(file_url, verify=False, proxies=proxies)
         print('=======res.content========')
         print(res.content)
         with open(file_path, 'wb') as f:
