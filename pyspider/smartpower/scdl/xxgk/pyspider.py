@@ -11,6 +11,7 @@ import os
 import time
 import base64
 import requests
+from datetime import datetime
 
 import pathlib
 import pymysql
@@ -42,6 +43,7 @@ class Handler(BaseHandler):
     }
 
     def __init__(self):
+        self.proxy_list = self.get_proxy_list()
         self.spider_config = {
             "source_url": 'https://www.sc.sgcc.com.cn/html/main',
             'urls': [
@@ -96,9 +98,14 @@ class Handler(BaseHandler):
         for i in range(2, int(pageCount) + 1):
             self.crawl(response.url.replace('1.html', str(i) + '.html'),
                        save={'classify': response.save['classify'], 'classify_name': response.save['classify_name']},
-                       validate_cert=False, method='GET', callback=self.item_page)
+                       validate_cert=False, method='GET', callback=self.item_page, proxy='http://{proxy}'.format(proxy=self.get_random_proxy()))
 
     def item_page(self, response):
+        if response.status == 403 or response.status == 599:
+            new_proxy = self.update_proxy()
+            self.crawl(response.url, save={'classify': response.save['classify'], 'classify_name': response.save['classify_name']},
+                       validate_cer=False, method='GET', callback=self.item_page, proxy='http://{proxy}'.format(proxy=self.update_proxy()))
+
         boxs = response.doc('ul.list > li').items()
         for box in boxs:
             art_href = box('a').attr('href')
@@ -202,3 +209,33 @@ class Handler(BaseHandler):
         except pymysql.err.IntegrityError:
             # 发生错误时回滚
             self.conn.rollback()
+
+    def get_proxy_list(self):
+        return requests.get('http://webapi.http.zhimacangku.com/getip?neek=9e2a270f&num=10&type=2&time=4&pro=0&city=0&yys=0&port=1&pack=0&ts=1&ys=0&cs=0&lb=1&sb=&pb=4&mr=3&regions=&cf=0').json()
+    
+    def get_random_proxy(self):
+        if self.proxy_list and self.proxy_list.get('code') == 0:
+            proxy_items = self.proxy_list.get('data')
+            for item in proxy_items:
+                if not self.is_expired(item.get('expire_time')):
+                    return item.get('ip') + ':' + str(item.get('port'))
+        self.proxy_list = self.get_proxy_list()
+        return self.get_random_proxy()
+    
+    def is_expired(self, dt):
+        """
+        判断时间是否过期
+        :param dt:日期字符串
+        :return:True or False
+        """
+        if isinstance(dt, str):
+            dt = datetime.strptime(dt, '%Y-%m-%d %H:%M:%S')
+            return datetime.now() > dt
+    def update_proxy(self):
+        """
+        重新通过api获取代理，更新代理
+        """
+        # 重新通过api获取代理
+        self.proxy_list = self.get_proxy_list()
+        new_proxy = self.get_random_proxy()
+        return new_proxy
