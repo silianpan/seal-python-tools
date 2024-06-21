@@ -108,7 +108,12 @@ class Handler(BaseHandler):
 
     @config(priority=2)
     def detail_page(self, response):
-        content = response.doc('.list_detail').html().strip()
+        content = response.doc('.list_detail').html()
+        if content is None:
+            content = response.doc('.content').html()
+            if content is None:
+                return
+        content = content.strip()
         # b64encode函数的参数为byte类型，所以必须先转码
         contentBytesString = content.encode('utf-8')
         obj = {
