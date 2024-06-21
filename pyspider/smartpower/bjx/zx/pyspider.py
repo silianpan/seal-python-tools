@@ -33,6 +33,18 @@ class Handler(BaseHandler):
             "source_url": 'https://news.bjx.com.cn',
             'urls': [
                 {'url': '/yw', 'classify': 'yw', 'classify_name': u'要闻'},
+                {'url': '/zc', 'classify': 'zc', 'classify_name': u'政策'},
+                {'url': '/mq', 'classify': 'qy', 'classify_name': u'企业'},
+                {'url': '/sc', 'classify': 'sc', 'classify_name': u'市场'},
+                {'url': '/pl', 'classify': 'pl', 'classify_name': u'评论'},
+                {'url': '/ft', 'classify': 'ft', 'classify_name': u'访谈'},
+                {'url': '/rw', 'classify': 'rw', 'classify_name': u'人物'},
+                {'url': '/cj', 'classify': 'cj', 'classify_name': u'财经'},
+                {'url': '/bg', 'classify': 'bg', 'classify_name': u'报告'},
+                {'url': '/sj', 'classify': 'sj', 'classify_name': u'数据'},
+                {'url': '/bz', 'classify': 'bz', 'classify_name': u'标准'},
+                {'url': '/js', 'classify': 'js', 'classify_name': u'技术'},
+                {'url': '/guanli', 'classify': 'guanli', 'classify_name': u'管理'},
             ],
             'db': {
                 'host': '39.98.39.58',
@@ -72,13 +84,13 @@ class Handler(BaseHandler):
         self.item_page(response)
         pageCount = response.doc('.cc-paging > a:nth-last-child(2)').text().strip()
         for i in range(2, int(pageCount) + 1):
-            self.crawl(response.url + '/' + str(i) + '/',
+            self.crawl(response.url + str(i),
                        save={'classify': response.save['classify'], 'classify_name': response.save['classify_name']},
                        validate_cert=False, method='GET', callback=self.item_page,
                        user_agent=UserAgent().random)
 
     def item_page(self, response):
-        boxs = response.doc('ul > li').items()
+        boxs = response.doc('.cc-list-content > ul > li').items()
         for box in boxs:
             art_href = box('a').attr('href')
             art_title = box('a').attr('title')
