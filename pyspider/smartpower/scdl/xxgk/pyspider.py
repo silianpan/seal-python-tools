@@ -133,7 +133,8 @@ class Handler(BaseHandler):
     @config(priority=2)
     def detail_page(self, response):
         if response.status_code in [401, 403, 599]:
-            self.crawl(response.url, save={'classify': response.save['classify'], 'classify_name': response.save['classify_name'], 'title': response.save['title']},
+            self.crawl(response.url, save={'classify': response.save['classify'], 'classify_name': response.save['classify_name'],
+                                           'title': response.save['title'], 'pub_date': response.save['pub_date']},
                        validate_cer=False, method='GET', callback=self.item_page, proxy='http://{proxy}'.format(proxy=self.update_proxy()),
                        user_agent=UserAgent().random)
         content = response.doc('.txtcon').html().strip()
