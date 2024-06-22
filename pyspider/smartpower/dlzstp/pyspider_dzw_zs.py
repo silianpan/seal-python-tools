@@ -91,6 +91,16 @@ class Handler(BaseHandler):
                              'classify_name': response.save['classify_name'], 'industry': response.save['industry']},
                              callback=self.detail_page,
                              user_agent=UserAgent().random)
+        
+        # 下钻词条
+        entries = response.doc('span.entry > a.zhuang-qu').items()
+        for entry in entries:
+            entry_href = entry.attr('href')
+            self.crawl(entry_href, validate_cert=False,
+                       save={'classify': response.save['classify'],
+                             'classify_name': response.save['classify_name'], 'industry': response.save['industry']},
+                             callback=self.next_page,
+                             user_agent=UserAgent().random)
 
     @config(priority=2)
     def detail_page(self, response):
