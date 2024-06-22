@@ -80,7 +80,10 @@ class Handler(BaseHandler):
     def next_page(self, response):
         # 爬取详细文章
         self.item_page(response)
-        pageCount = response.doc('.cc-paging > a:nth-last-child(2)').text().strip()
+        pageCount = response.doc('.cc-paging > a:nth-last-child(2)')
+        if not pageCount:
+            return
+        pageCount = pageCount.text().strip()
         for i in range(2, int(pageCount) + 1):
             self.crawl(response.url + str(i),
                        save={'classify': response.save['classify'], 'classify_name': response.save['classify_name'],
@@ -101,7 +104,10 @@ class Handler(BaseHandler):
 
     @config(priority=2)
     def detail_page(self, response):
-        content = response.doc('.cc-article').html().strip()
+        content = response.doc('.cc-article').html()
+        if not content:
+            return
+        content = content.strip()
         # b64encode函数的参数为byte类型，所以必须先转码
         contentBytesString = content.encode('utf-8')
         obj = {
