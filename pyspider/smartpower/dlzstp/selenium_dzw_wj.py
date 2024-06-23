@@ -7,6 +7,7 @@
 # @Software: PyCharm
 
 import base64
+import json
 from time import sleep
 import pymysql
 from selenium import webdriver
@@ -91,7 +92,8 @@ class Handler():
                 # close_btn = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, '.el-dialog__header > button.el-dialog__headerbtn')))
                 close_btn = self.browser.find_element(By.CSS_SELECTOR, '.el-dialog__header > button.el-dialog__headerbtn')
                 self.browser.execute_script("arguments[0].click()", close_btn)
-                self.save_file_data(self, {
+                sleep(20)
+                self.save_file_data({
                     'title': title,
                     'pub_date': pub_date,
                 })
@@ -117,12 +119,16 @@ class Handler():
 
     def save_file_data(self, data):
         title = data['title']
-        file_path = self.spider_config['file']['out_dir'] + title
+        file_path = self.spider_config['file']['out_dir'] + title + '.pdf'
+        print(file_path)
         content = ''
-        with open(file_path, 'rb') as f:
-            content = base64.b64encode(f.read()).decode('utf-8')
-        print('=======read.file========')
-        print(content)
+        # try:
+        #     with open(file_path, 'rb') as f:
+        #         content = base64.b64encode(f.read()).decode('utf-8')
+        #     print('=======read.file========')
+        #     print(content)
+        # except:
+        #     print('read file error')
         obj = {
            'medias': [{
                'content': content,
@@ -130,9 +136,10 @@ class Handler():
            }]
         }
         ret = {
-            'id': md5string(title),
+            'id': title,
             'title': title,
             'pub_date': data['pub_date'],
+            'json': json.dumps(obj, ensure_ascii=False),
         }
         self.save_to_mysql(self.spider_config['db']['table_name'], ret)
         return ret
