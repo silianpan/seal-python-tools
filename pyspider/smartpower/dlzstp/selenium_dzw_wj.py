@@ -76,7 +76,7 @@ class Handler():
             for item in items:
                 title = item.find_element(By.CSS_SELECTOR, '.wraterfall-item > .item > .right > .title')
                 title = title.text.strip()
-                if title in all_titles:
+                if not title or title in all_titles:
                     continue
                 pub_date = item.find_element(By.CSS_SELECTOR, '.wraterfall-item > .item > .right > .info > .flex > div:first-child')
                 pub_date = pub_date.text.strip()
