@@ -44,6 +44,13 @@ def index_page(page):
     :param page: 页码
     """
     print('正在爬取第', page, '页')
+    browser.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
+        "source": """
+            Object.defineProperty(navigator,'webdriver',{
+                get: () => undefined
+            })
+        """
+    })
     # try:
     url = 'http://www.sgcc.com.cn/html/sgcc/col2022121491/column_2022121491_' + str(page) + '.shtml'
     print(url)
