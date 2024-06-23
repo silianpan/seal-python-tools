@@ -76,7 +76,6 @@ class Handler():
             for item in items:
                 title = item.find_element(By.CSS_SELECTOR, '.wraterfall-item > .item > .right > .title')
                 title = title.text.strip()
-                print(title)
                 if title in all_titles:
                     continue
                 pub_date = item.find_element(By.CSS_SELECTOR, '.wraterfall-item > .item > .right > .info > .flex > div:first-child')
@@ -111,8 +110,11 @@ class Handler():
             self.cursor.execute(sql)
             print('Count:', self.cursor.rowcount)
             rows = self.cursor.fetchall()
-            print(rows)
-            return rows
+            ret_arr = []
+            for row in rows:
+                ret_arr.append(row[0])
+            print(ret_arr)
+            return ret_arr
         except:
             print('Error')
             return []
