@@ -72,26 +72,32 @@ class Handler():
         self.browser.get('https://www.dlzstp.com/file/list')
         sleep(2)
         for i in range(0, 101):
+            print(i)
             items = self.browser.find_elements(By.CSS_SELECTOR, '.wraterfall-item > .item')
             for item in items:
                 title = item.find_element(By.CSS_SELECTOR, '.wraterfall-item > .item > .right > .title')
                 title = title.text.strip()
+                print(title)
                 if not title or title in all_titles:
                     continue
                 pub_date = item.find_element(By.CSS_SELECTOR, '.wraterfall-item > .item > .right > .info > .flex > div:first-child')
                 pub_date = pub_date.text.strip()
+                print(pub_date)
 
                 # 打开对话框
                 self.browser.execute_script("arguments[0].click()", item)
                 # 下载
-                download_btn = self.wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, '.toolbar > button.el-button')))
+                download_btn = self.wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'body > .el-dialog__wrapper:last-child > .all-file-dialog > .el-dialog__body > div > .toolbar > button.el-button')))
+                print('download_btn')
+                print(download_btn)
                 self.browser.execute_script("arguments[0].click()", download_btn)
                 sleep(2)
                 # 关闭窗口
                 # close_btn = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, '.el-dialog__header > button.el-dialog__headerbtn')))
-                close_btn = self.browser.find_element(By.CSS_SELECTOR, '.el-dialog__header > button.el-dialog__headerbtn')
+                close_btn = self.browser.find_element(By.CSS_SELECTOR, 'body > .el-dialog__wrapper:last-child > div > .el-dialog__header > button.el-dialog__headerbtn')
+                print('close_btn')
+                print(close_btn)
                 self.browser.execute_script("arguments[0].click()", close_btn)
-                sleep(20)
                 self.save_file_data({
                     'title': title,
                     'pub_date': pub_date,
