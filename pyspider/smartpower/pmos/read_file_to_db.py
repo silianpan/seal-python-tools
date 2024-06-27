@@ -14,11 +14,11 @@ from mysql_util import MysqlUtil
 from dir2excel import get_file_list
 
 if __name__ == '__main__':
-  mu = MysqlUtil('8.137.8.225', 'smartpower-spider', 'root', 'Spider@123', '33306')
+  mu = MysqlUtil('8.137.8.225', 'smartpower-spider', 'root', 'Spider@123', 33306)
   md5_hash = hashlib.md5()
   dir = '/Users/liupan/Downloads/smartpower-spider/四川电力交易中心'
   file_list = []
-  get_file_list(dir, file_list, dir, '/')
+  get_file_list(dir, file_list, dir, split_char='/')
   #print(file_list)
   for file in file_list:
     content = ''

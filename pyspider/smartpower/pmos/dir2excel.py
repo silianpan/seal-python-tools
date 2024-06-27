@@ -40,7 +40,7 @@ def get_file_list(file_dir, file_list, source_dir, split_char='/'):
         # 获取文件路径
         # 去掉source_dir
         # 替换/为.
-        print(file_dir)
+        #print(file_dir)
         file_name = file_dir.replace(source_dir, '')
         file_name = file_name.lstrip('/')
         file_name = file_name.replace('/', split_char)
