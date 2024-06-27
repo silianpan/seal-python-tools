@@ -19,7 +19,7 @@ if __name__ == '__main__':
   dir = '/Users/liupan/Downloads/smartpower-spider/四川电力交易中心'
   file_list = []
   get_file_list(dir, file_list, dir, split_char='/')
-  #print(file_list)
+  print(len(file_list))
   for file in file_list:
     content = ''
     with open(dir + '/' + file, 'rb') as f:
