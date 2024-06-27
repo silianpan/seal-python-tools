@@ -49,6 +49,7 @@ class MysqlUtil:
         if self.is_connected:
             tablename = self.escape(tablename)
             _keys = ",".join(self.escape(k) for k in ret)
+            #print(_keys)
             _values = ",".join(['%s', ] * len(ret))
             insert_sql = "insert into %s (%s) values (%s)" % (tablename, _keys, _values)
             try:
