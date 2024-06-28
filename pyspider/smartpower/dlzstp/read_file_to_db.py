@@ -17,12 +17,24 @@ from dir2excel import get_file_list
 
 if __name__ == '__main__':
   mu = MysqlUtil('8.137.8.225', 'smartpower-spider', 'root', 'Spider@123', 33306)
+
+  # 1. 查询mysql数据，方便去重
+  sql = "select distinct t.url from dlzstp_dzw_wj t"
+  rows = mu.select(sql)
+  exist_urls = []
+  for row in rows:
+      url = str(row[0]).strip()
+      exist_urls.append(url)
+  # 写数据
   md5_hash = hashlib.md5()
   dir = '/data/spider-files/dlzstp'
   file_list = []
   get_file_list(dir, file_list, dir, split_char='/')
   print(len(file_list))
   for file in file_list:
+    if file in exist_urls:
+       continue
+    print(file)
     content = ''
     with open(dir + '/' + file, 'rb') as f:
         content = base64.b64encode(f.read()).decode('utf-8')
